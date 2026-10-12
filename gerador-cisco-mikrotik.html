@@ -1,0 +1,2150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gerador de configuração · Cisco & MikroTik</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Red+Hat+Mono:wght@400;500&display=swap">
+<style>
+
+:root{
+  --sans:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"Red Hat Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
+  --bg:#edf1f4; --surface:#fbfcfd; --surface-2:#f0f4f7; --ink:#16212b; --muted:#4f5f6d;
+  --line:#d3dce3; --line-strong:#a9b7c3;
+  --accent:#1d5fb0; --accent-ink:#ffffff; --accent-soft:#dce9f8;
+  --err:#b3261e; --warn:#8a5200; --ok:#1b6e3f;
+  --wan:#b06a00; --wan2:#7a4fa3; --trunk:#1f3347; --unused:#93a1ad;
+  --jack:#e3e9ee; --jack-edge:#71828f;
+  --code-bg:#14212c; --code-bar:#1b2b39; --code-ink:#d9e4ec; --code-mute:#8da1b2;
+  --code-path:#7dbcff; --code-verb:#f2b968; --code-key:#9bd4c8; --code-str:#b9e3a1; --code-num:#e2c4f3;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d151c; --surface:#141f29; --surface-2:#1a2733; --ink:#e4ecf2; --muted:#9db0bf;
+    --line:#263644; --line-strong:#3a4d5e;
+    --accent:#5aa4ef; --accent-ink:#071320; --accent-soft:#17324d;
+    --err:#ff8a80; --warn:#f0b35a; --ok:#6fcf97;
+    --wan:#e0a040; --wan2:#b48ee0; --trunk:#9db4c8; --unused:#5d6f7e;
+    --jack:#22313f; --jack-edge:#5f7688;
+    --code-bg:#0a1117; --code-bar:#121d27;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d151c; --surface:#141f29; --surface-2:#1a2733; --ink:#e4ecf2; --muted:#9db0bf;
+  --line:#263644; --line-strong:#3a4d5e;
+  --accent:#5aa4ef; --accent-ink:#071320; --accent-soft:#17324d;
+  --err:#ff8a80; --warn:#f0b35a; --ok:#6fcf97;
+  --wan:#e0a040; --wan2:#b48ee0; --trunk:#9db4c8; --unused:#5d6f7e;
+  --jack:#22313f; --jack-edge:#5f7688;
+  --code-bg:#0a1117; --code-bar:#121d27;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+button,input,select{font:inherit}
+
+.wrap{max-width:1480px;margin:0 auto;padding:24px 22px 104px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+h1{margin:0;font-size:clamp(26px,3.6vw,42px);line-height:1.05;letter-spacing:-.025em;font-weight:700}
+.lead{margin:8px 0 0;color:var(--muted);max-width:62ch}
+h2{margin:0 0 4px;font-size:18px;letter-spacing:-.01em;font-weight:600}
+.hint{margin:0 0 14px;color:var(--muted);font-size:14px;max-width:72ch}
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:36px;align-items:start}
+.form section{padding:22px 0;border-top:1px solid var(--line)}
+.form section:first-child{border-top:0}
+
+/* campos */
+.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.f>span{font-weight:500}
+input[type=text],input[type=number],input[type=password],select{
+  color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;
+  padding:8px 10px;min-width:0;width:100%;font-size:15px}
+input::placeholder{color:var(--muted);opacity:.7}
+input:focus-visible,select:focus-visible,button:focus-visible,pre:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:12px}
+.row:first-of-type{margin-top:0}
+
+/* controle segmentado */
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg label{position:relative;display:block}
+.seg input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.seg span{display:block;padding:8px 14px;font-size:14px;color:var(--ink)}
+.seg label+label span{border-left:1px solid var(--line-strong)}
+.seg input:checked+span{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:-3px}
+.seg-title{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:4px}
+
+/* chips */
+.chip{position:relative;display:inline-block}
+.chip input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.chip span{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border:1px solid var(--line-strong);
+  border-radius:999px;font-size:13px;background:var(--surface);color:var(--ink)}
+.chip input:checked+span{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.chip input:checked+span::before{content:"✓"}
+.chip input:focus-visible+span{outline:2px solid var(--accent);outline-offset:1px}
+
+/* opções em lista */
+.opt{display:grid;grid-template-columns:auto 1fr;gap:0 10px;padding:9px 0;cursor:pointer}
+.opt input{width:18px;height:18px;margin:3px 0 0;accent-color:var(--accent)}
+.opt b{font-weight:600}
+.opt small{grid-column:2;color:var(--muted);font-size:13px}
+.opts{margin-top:4px}
+.opts .opt+.opt{border-top:1px solid var(--line)}
+.sub{margin:6px 0 10px 28px}
+
+/* botões */
+.btn{padding:8px 14px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;font-size:14px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--err)}
+.btn.small{padding:5px 10px;font-size:13px}
+
+/* painel de portas */
+.chassis{display:flex;gap:16px;align-items:center;padding:14px 16px;border-radius:12px;
+  background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--line-strong);
+  box-shadow:inset 0 0 0 4px var(--surface),inset 0 0 0 5px var(--line)}
+.plate{min-width:92px;padding-right:16px;border-right:1px solid var(--line-strong)}
+.plate b{display:block;font-size:17px;letter-spacing:-.01em;line-height:1.2}
+.plate small{color:var(--muted);font-size:12px}
+.ports{display:flex;flex-wrap:wrap;gap:4px 2px}
+.port{display:flex;flex-direction:column;align-items:center;gap:3px;width:58px;padding:9px 2px 7px;
+  border:1px solid transparent;border-radius:8px;background:transparent;color:var(--ink);cursor:pointer}
+.port:hover{background:var(--surface-2)}
+.port[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.port.wan{--pc:var(--wan)}
+.port.wan2{--pc:var(--wan2)}
+.port.trunk{--pc:var(--trunk)}
+.port.sfp-first{margin-left:12px}
+.jack{position:relative;display:block;width:38px;height:29px;background:var(--jack);border:1.5px solid var(--jack-edge);border-radius:3px}
+.jack::before{content:"";position:absolute;top:-5px;left:50%;width:12px;height:5px;margin-left:-6px;
+  background:var(--jack-edge);border-radius:2px 2px 0 0}
+.jack::after{content:"";position:absolute;left:6px;right:6px;top:6px;height:9px;
+  background:repeating-linear-gradient(90deg,var(--jack-edge) 0 2px,transparent 2px 4px)}
+.jack i{position:absolute;left:0;right:0;bottom:0;height:6px;background:var(--pc,var(--unused))}
+.port.unused .jack{border-style:dashed;background:transparent}
+.port.sfp .jack{height:24px;border-radius:2px}
+.port.sfp .jack::before,.port.sfp .jack::after{display:none}
+.pn{font-size:14px;font-weight:600;line-height:1.1}
+.pr{font-size:12px;color:var(--muted);line-height:1.1}
+.pedit{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;margin-top:16px}
+.ptitle{font-size:14px;color:var(--muted);align-self:center;min-width:88px}
+.ptitle strong{color:var(--ink);font-weight:600}
+.pedit .f{width:min(240px,100%)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:14px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--c);vertical-align:-2px;margin-right:6px}
+.legend i.dash{background:transparent;border:1.5px dashed var(--unused)}
+
+/* VLANs */
+.vlan{border-left:5px solid var(--vc);padding:10px 0 12px 14px;margin:0 0 4px;border-bottom:1px solid var(--line)}
+.vlan-main{display:grid;grid-template-columns:78px minmax(110px,1.2fr) minmax(130px,1.1fr) minmax(110px,1fr) minmax(150px,1.3fr);gap:10px}
+.vlan-flags{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px}
+.vlan-flags .spacer{flex:1}
+.empty{color:var(--muted);margin:8px 0 12px}
+.add-vlan{margin-top:12px}
+
+.acl{border-left:5px solid var(--accent);padding:10px 0 12px 14px;margin:0 0 8px;border-bottom:1px solid var(--line)}
+.acl-grid{display:grid;grid-template-columns:minmax(150px,1fr) minmax(180px,1.2fr) 90px auto;gap:10px;align-items:end}
+.acl textarea{width:100%;margin-top:10px;resize:vertical;min-height:82px;color:var(--ink);background:var(--surface);border:1px solid var(--line-strong);border-radius:6px;padding:8px 10px;font:13px/1.45 var(--mono)}
+@media (max-width:760px){.acl-grid{grid-template-columns:1fr 1fr}.acl-grid .acl-remove{grid-column:1/-1}}
+/* saída */
+.out{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;flex-direction:column;
+  max-height:calc(100dvh - 28px);min-height:440px}
+.issues{margin:0 0 10px;font-size:14px;max-height:150px;overflow:auto;flex:none}
+.issues ul{margin:0;padding:0;list-style:none;display:grid;gap:4px}
+.issues li{padding:6px 10px;border-left:4px solid var(--warn);background:var(--surface);border-radius:0 6px 6px 0}
+.issues li.erro{border-color:var(--err)}
+.issues li b{margin-right:6px}
+.issues li.erro b{color:var(--err)}
+.issues li.aviso b{color:var(--warn)}
+.issues .ok{margin:0;color:var(--ok);font-weight:600}
+.codewrap{display:flex;flex-direction:column;min-height:0;flex:1;background:var(--code-bg);border-radius:12px;overflow:hidden}
+.codebar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:8px 10px 8px 16px;background:var(--code-bar);color:var(--code-mute);font-size:13px}
+.codebar .name{color:var(--code-ink);font-weight:600;overflow-wrap:anywhere}
+.codebar .status{flex:1;min-width:120px}
+.codebar .chip span{background:transparent;color:var(--code-ink);border-color:#3f5568}
+.codebar .chip input:checked+span{background:#24415c;border-color:#5aa4ef}
+pre#code{margin:0;padding:14px 16px 18px;overflow:auto;flex:1;min-height:0;color:var(--code-ink);
+  font:13px/1.6 var(--mono);tab-size:2;white-space:pre}
+#code .c{color:var(--code-mute)} #code .p{color:var(--code-path)} #code .v{color:var(--code-verb)}
+#code .k{color:var(--code-key)} #code .s{color:var(--code-str)} #code .n{color:var(--code-num)}
+
+/* como aplicar */
+.howto ol{margin:8px 0 0;padding-left:20px;max-width:72ch}
+.howto li{margin:0 0 8px}
+code.inl{font:13px var(--mono);background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px;overflow-wrap:anywhere}
+
+.mbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:5;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line-strong);font-size:14px}
+
+@media (max-width:1000px){
+  .grid{grid-template-columns:minmax(0,1fr);gap:8px}
+  .out{position:static;max-height:none;min-height:0}
+  pre#code{max-height:70vh}
+  .mbar{display:flex}
+}
+@media (max-width:760px){
+  .wrap{padding:18px 14px 104px}
+  .vlan-main{grid-template-columns:78px minmax(0,1fr)}
+  .vlan-main .f-net,.vlan-main .f-gw,.vlan-main .f-pool{grid-column:1/-1}
+  .chassis{flex-direction:column;align-items:flex-start}
+  .plate{border-right:0;padding-right:0}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+
+.platform-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin:0 0 8px;padding:14px 18px;border-radius:12px;background:var(--surface);border:1px solid var(--line-strong);box-shadow:0 1px 0 var(--line)}
+.platform-bar .plabel{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.02em;text-transform:uppercase}
+.platform-bar .seg span{min-width:130px;text-align:center}
+.app-panel{display:none}
+.app-panel.active{display:block}
+.app-panel > .wrap{padding-top:8px}
+.brand-sub{font-size:14px;color:var(--muted);margin-top:4px}
+#app-cisco .top h1::after{content:""; }
+
+
+</style>
+</head>
+<body>
+<div class="wrap" style="padding-bottom:0">
+  <header class="top" style="margin-bottom:14px">
+    <div>
+      <h1>Gerador de configuração</h1>
+      <p class="lead">Escolha Cisco ou MikroTik, defina portas, VLANs, WAN e segurança. O script aparece ao lado, pronto para copiar e aplicar.</p>
+    </div>
+  </header>
+  <div class="platform-bar" role="group" aria-label="Plataforma">
+    <span class="plabel">Plataforma</span>
+    <div class="seg" role="radiogroup" aria-label="Escolher plataforma">
+      <label><input type="radio" name="platform" value="cisco" checked><span>Cisco IOS / XE</span></label>
+      <label><input type="radio" name="platform" value="mikrotik"><span>MikroTik RouterOS</span></label>
+    </div>
+  </div>
+</div>
+
+<div id="app-cisco" class="app-panel active">
+  <div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Gerador de configuração Cisco IOS/IOS XE</h1>
+      <p class="lead">Defina portas, VLANs, WAN e segurança. A configuração Cisco IOS/IOS XE aparece ao lado, pronta para copiar e aplicar.</p>
+    </div>
+    <button type="button" class="btn" id="reset">Restaurar exemplo</button>
+  </header>
+
+  <div class="grid">
+    <div class="form">
+
+      <section>
+        <h2>Arquitetura e perfil</h2>
+        <div class="row">
+          <label class="f"><span>Perfil de configuração</span><select data-bind="profile">
+            <option value="custom">Personalizado</option>
+            <option value="core">Switch Core / L3</option>
+            <option value="access">Switch Access</option>
+            <option value="edge">Router / Edge</option>
+          </select></label>
+          <label class="f"><span>Modo STP</span><select data-bind="stp.mode"><option value="rapid-pvst">Rapid-PVST+</option><option value="pvst">PVST+</option><option value="mst">MST</option></select></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>Prioridade STP (0-61440)</span><input type="number" min="0" max="61440" step="4096" data-bind="stp.priority"></label>
+          <label class="f"><span>VLANs para root primary</span><input type="text" data-bind="stp.rootVlans" placeholder="10,20,30"></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Equipamento</h2>
+        <div class="row">
+          <label class="f"><span>Modelo</span><select data-bind="model" id="model"></select></label>
+          <label class="f" data-when="model=custom"><span>Quantidade de portas</span><input type="number" min="2" max="48" data-bind="customCount"></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>Hostname do equipamento</span><input type="text" data-bind="identity" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Fuso horário</span><select data-bind="tz" id="tz"></select></label>
+          <div>
+            <span class="seg-title">Plataforma Cisco</span>
+            <div class="seg" role="radiogroup" aria-label="Plataforma Cisco">
+              <label><input type="radio" name="c_ros" value="xe" data-bind="ros"><span>IOS XE</span></label>
+              <label><input type="radio" name="c_ros" value="ios" data-bind="ros"><span>IOS</span></label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Portas</h2>
+        <p class="hint">Clique numa porta e escolha a função. A cor de cada porta de acesso é a cor da VLAN.</p>
+        <div class="chassis" role="group" aria-label="Portas do roteador">
+          <div class="plate"><b id="plateName"></b><small id="plateSub"></small></div>
+          <div class="ports" id="ports"></div>
+        </div>
+        <div class="pedit">
+          <div class="ptitle">Porta <strong id="peName"></strong></div>
+          <div>
+            <span class="seg-title">Função</span>
+            <div class="seg" role="radiogroup" aria-label="Função da porta">
+              <label><input type="radio" name="c_prole" value="wan"><span>WAN</span></label>
+              <label><input type="radio" name="c_prole" value="wan2"><span>WAN 2</span></label>
+              <label><input type="radio" name="c_prole" value="trunk"><span>Tronco</span></label>
+              <label><input type="radio" name="c_prole" value="access"><span>Acesso</span></label>
+              <label><input type="radio" name="c_prole" value="unused"><span>Livre</span></label>
+            </div>
+          </div>
+          <label class="f" id="peVlanWrap"><span>VLAN de acesso</span><select id="peVlan"></select></label>
+          <label class="f"><span>Descrição (opcional)</span><input type="text" id="peNote" placeholder="Ex.: uplink do switch de core" autocomplete="off"></label>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <span><i style="--c:var(--wan)"></i>WAN: saída para a Internet</span>
+          <span><i style="--c:var(--wan2)"></i>WAN 2: failover</span>
+          <span><i style="--c:var(--trunk)"></i>Tronco: todas as VLANs com tag</span>
+          <span><i style="--c:var(--accent)"></i>Acesso: uma VLAN sem tag</span>
+          <span><i class="dash"></i>Livre: porta desativada</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>VLANs</h2>
+        <p class="hint">Configure as VLANs e, se necessário, informe os servidores DHCP para gerar ip helper-address na SVI. Se o campo de DHCP Relay ficar vazio, nenhum helper será gerado.</p>
+        <div id="vlanList"></div>
+        <button type="button" class="btn add-vlan" id="addVlan">Adicionar VLAN</button>
+      </section>
+
+      <section>
+        <h2>ACLs personalizadas</h2>
+        <p class="hint">Crie uma ACL nomeada, escolha a interface e o sentido (IN/OUT). Informe uma regra Cisco por linha.</p>
+        <div id="aclList"></div>
+        <button type="button" class="btn add-vlan" id="addAcl">Adicionar ACL</button>
+      </section>
+
+      <section>
+        <h2>Internet (WAN)</h2>
+        <div>
+          <span class="seg-title">Tipo de conexão</span>
+          <div class="seg" role="radiogroup" aria-label="Tipo de conexão WAN">
+            <label><input type="radio" name="c_wantype" value="dhcp" data-bind="wan.type"><span>DHCP</span></label>
+            <label><input type="radio" name="c_wantype" value="static" data-bind="wan.type"><span>IP fixo</span></label>
+            <label><input type="radio" name="c_wantype" value="pppoe" data-bind="wan.type"><span>PPPoE</span></label>
+          </div>
+        </div>
+        <div class="row" data-when="wan.type=static">
+          <label class="f"><span>Endereço IP com máscara</span><input type="text" data-bind="wan.ip" placeholder="200.10.20.2/30" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Gateway</span><input type="text" data-bind="wan.gw" placeholder="200.10.20.1" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="row" data-when="wan.type=pppoe">
+          <label class="f"><span>Usuário PPPoE</span><input type="text" data-bind="wan.user" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Senha PPPoE</span><input type="password" data-bind="wan.pass" autocomplete="new-password"></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>VLAN da WAN (opcional)</span><input type="text" inputmode="numeric" data-bind="wan.vlan" placeholder="Deixe vazio se a operadora entrega sem tag" autocomplete="off"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="wan.nat"><b>NAT de saída (masquerade)</b><small>Traduz os endereços das VLANs para o IP da WAN.</small></label>
+        </div>
+      </section>
+
+      <section id="failoverSection" hidden>
+        <h2>Failover (<span id="failoverPortName"></span>)</h2>
+        <p class="hint">A WAN principal tem prioridade; esta porta assume automaticamente quando a principal cai. Se as duas forem DHCP ou PPPoE, a troca ocorre quando a interface ou a sessão cai — não quando o link continua ligado mas sem Internet. Para detectar isso de forma confiável, use IP fixo em pelo menos uma das duas.</p>
+        <div>
+          <span class="seg-title">Tipo de conexão</span>
+          <div class="seg" role="radiogroup" aria-label="Tipo de conexão WAN 2">
+            <label><input type="radio" name="c_wan2type" value="dhcp" data-bind="wan2.type"><span>DHCP</span></label>
+            <label><input type="radio" name="c_wan2type" value="static" data-bind="wan2.type"><span>IP fixo</span></label>
+            <label><input type="radio" name="c_wan2type" value="pppoe" data-bind="wan2.type"><span>PPPoE</span></label>
+          </div>
+        </div>
+        <div class="row" data-when="wan2.type=static">
+          <label class="f"><span>Endereço IP com máscara</span><input type="text" data-bind="wan2.ip" placeholder="200.10.30.2/30" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Gateway</span><input type="text" data-bind="wan2.gw" placeholder="200.10.30.1" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="row" data-when="wan2.type=pppoe">
+          <label class="f"><span>Usuário PPPoE</span><input type="text" data-bind="wan2.user" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Senha PPPoE</span><input type="password" data-bind="wan2.pass" autocomplete="new-password"></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>VLAN da WAN 2 (opcional)</span><input type="text" inputmode="numeric" data-bind="wan2.vlan" placeholder="Deixe vazio se a operadora entrega sem tag" autocomplete="off"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="failover.checkGateway"><b>Verificar o gateway com ping</b><small>Nas WANs de IP fixo, some a rota se o gateway parar de responder. Vale mesmo sem falha de link.</small></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>DNS e horário</h2>
+        <div class="row">
+          <label class="f"><span>Servidores DNS (separados por vírgula)</span><input type="text" data-bind="dns.servers" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Servidores NTP</span><input type="text" data-bind="dns.ntp" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="dns.local"><b>Roteador como DNS das VLANs</b><small>Os clientes DHCP usam o gateway como servidor DNS (cache local).</small></label>
+        </div>
+      </section>
+
+
+      <section>
+        <h2>Switching e proteção de portas</h2>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="switching.trunkNonegotiate"><b>Desabilitar DTP nos trunks</b><small>Gera switchport nonegotiate nas portas trunk.</small></label>
+          <label class="opt"><input type="checkbox" data-bind="switching.accessPortfast"><b>PortFast nas portas de acesso</b></label>
+          <label class="opt"><input type="checkbox" data-bind="switching.bpduGuard"><b>BPDU Guard</b><small>Aplicado às portas de acesso com PortFast.</small></label>
+          <label class="opt"><input type="checkbox" data-bind="switching.portSecurity"><b>Port Security</b><small>MAC sticky com limite definido abaixo.</small></label>
+          <label class="opt"><input type="checkbox" data-bind="switching.voiceVlan"><b>Voice VLAN</b><small>Use o campo abaixo para a VLAN de voz.</small></label>
+          <label class="opt"><input type="checkbox" data-bind="switching.dhcpSnooping"><b>DHCP Snooping</b></label>
+          <label class="opt"><input type="checkbox" data-bind="switching.dai"><b>Dynamic ARP Inspection</b></label>
+          <label class="opt"><input type="checkbox" data-bind="switching.ipSourceGuard"><b>IP Source Guard</b></label>
+          <label class="opt"><input type="checkbox" data-bind="switching.dot1x"><b>802.1X nas portas de acesso</b><small>Requer AAA/RADIUS corretamente configurado.</small></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>VLAN de voz</span><input type="number" min="1" max="4094" data-bind="switching.voiceVlanId" placeholder="70"></label>
+          <label class="f"><span>Máximo de MACs por porta</span><input type="number" min="1" max="128" data-bind="switching.maxMac" placeholder="2"></label>
+          <label class="f"><span>Storm-control (%)</span><input type="number" min="1" max="100" data-bind="switching.storm" placeholder="20"></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>VLAN nativa do trunk</span><input type="number" min="1" max="4094" data-bind="switching.nativeVlan" placeholder="999"></label>
+          <label class="f"><span>VLANs permitidas (vazio = todas as VLANs)</span><input type="text" data-bind="switching.allowedVlans" placeholder="10,20,30,40"></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>EtherChannel / LACP</h2>
+        <div class="row">
+          <label class="f"><span>Port-channel</span><input type="number" min="1" max="128" data-bind="lacp.id" placeholder="1"></label>
+          <label class="f"><span>Portas membros</span><input type="text" data-bind="lacp.members" placeholder="Gi1/0/47,Gi1/0/48"></label>
+        </div>
+        <div class="opts"><label class="opt"><input type="checkbox" data-bind="lacp.enabled"><b>Gerar LACP active</b><small>As portas membros serão agrupadas no Port-channel informado.</small></label></div>
+      </section>
+
+      <section>
+        <h2>Roteamento</h2>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="routing.ospf.enabled"><b>OSPF</b><small>Gera processo OSPF e redes configuradas abaixo.</small></label>
+          <label class="opt"><input type="checkbox" data-bind="routing.ospf.defaultOriginate"><b>Publicar rota default no OSPF</b></label>
+          <label class="opt"><input type="checkbox" data-bind="routing.ipSla.enabled"><b>IP SLA + tracking para failover</b><small>Monitora um destino e associa a rota default principal ao track.</small></label>
+        </div>
+        <div class="row" data-when="routing.ospf.enabled">
+          <label class="f"><span>Processo OSPF</span><input type="number" min="1" max="65535" data-bind="routing.ospf.process"></label>
+          <label class="f"><span>Router ID</span><input type="text" data-bind="routing.ospf.routerId" placeholder="10.255.255.1"></label>
+        </div>
+        <label class="f" data-when="routing.ospf.enabled"><span>Redes OSPF — uma por linha: CIDR,área[,passive]</span><textarea data-bind="routing.ospf.networks" rows="4" placeholder="10.0.10.0/24,0&#10;10.0.20.0/24,0,passive"></textarea></label>
+        <label class="f"><span>Rotas estáticas — uma por linha: destino/prefixo,next-hop</span><textarea data-bind="routing.staticRoutes" rows="4" placeholder="10.50.0.0/16,10.0.10.254&#10;172.16.20.0/24,10.0.20.254"></textarea></label>
+        <div class="row" data-when="routing.ipSla.enabled">
+          <label class="f"><span>IP SLA alvo</span><input type="text" data-bind="routing.ipSla.target" placeholder="8.8.8.8"></label>
+          <label class="f"><span>Frequência (segundos)</span><input type="number" min="1" max="3600" data-bind="routing.ipSla.frequency"></label>
+          <label class="f"><span>Track ID</span><input type="number" min="1" max="1000" data-bind="routing.ipSla.track"></label>
+        </div>
+      </section>
+
+
+      <section>
+        <h2>AAA / TACACS+ / RADIUS</h2>
+        <div class="row">
+          <label class="f"><span>Modo AAA</span><select data-bind="aaa.mode"><option value="local">Local</option><option value="tacacs">TACACS+</option><option value="radius">RADIUS</option></select></label>
+          <label class="f"><span>Servidor AAA</span><input type="text" data-bind="aaa.server" placeholder="10.0.20.15"></label>
+          <label class="f"><span>Chave</span><input type="password" data-bind="aaa.key" autocomplete="new-password"></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>SNMP e Syslog avançados</h2>
+        <div class="row">
+          <label class="f"><span>SNMP</span><select data-bind="snmp.version"><option value="2c">v2c</option><option value="3">v3 authPriv</option></select></label>
+          <label class="f" data-when="snmp.version=3"><span>Usuário SNMPv3</span><input type="text" data-bind="snmp.v3user"></label>
+          <label class="f" data-when="snmp.version=3"><span>Senha Auth/Priv</span><input type="password" data-bind="snmp.v3pass" autocomplete="new-password"></label>
+        </div>
+        <label class="f"><span>Interface origem Syslog/SNMP (opcional)</span><input type="text" data-bind="monitor.sourceInterface" placeholder="Vlan10"></label>
+        <div class="row">
+          <label class="f"><span>Severidade Syslog</span><select data-bind="syslog.severity"><option value="informational">Informational</option><option value="warnings">Warnings</option><option value="notifications">Notifications</option><option value="errors">Errors</option></select></label>
+          <label class="f"><span>Servidor Syslog adicional</span><input type="text" data-bind="syslog.host2" placeholder="10.0.20.12"></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Backup / Archive</h2>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="backup.enabled"><b>Ativar archive de configuração</b><small>Cria histórico local da configuração; ajuste a política de armazenamento conforme a plataforma.</small></label>
+          <label class="opt"><input type="checkbox" data-bind="backup.writeMemory"><b>write-memory no final</b></label>
+        </div>
+        <label class="f"><span>Caminho do archive</span><input type="text" data-bind="backup.path" placeholder="flash:archive-config"></label>
+      </section>
+
+      <section>
+        <h2>Segurança</h2>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="sec.firewall"><b>Firewall base e políticas das VLANs</b><small>Bloqueia entrada pela WAN e aplica Internet, isolamento e compartilhamento definidos em cada VLAN.</small></label>
+          <label class="opt" data-when="sec.firewall"><input type="checkbox" data-bind="sec.fasttrack"><b>FastTrack</b><small>Acelera conexões já estabelecidas. Desative se usar filas (queues) ou mangle.</small></label>
+          
+          <label class="opt"><input type="checkbox" data-bind="sec.restrictMgmt"><b>Restringir o acesso ao roteador à gerência</b><small>CLI/console Cisco e SSH só respondem à VLAN de gerência e às redes extras abaixo.</small></label>
+        </div>
+        <div class="sub" data-when="sec.restrictMgmt">
+          <label class="f"><span>Redes extras com acesso (VPN, equipe de TI)</span><input type="text" data-bind="sec.extraNets" placeholder="172.16.5.0/24, 192.168.88.10" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="sec.disableServices"><b>Desativar serviços inseguros</b><small>Telnet, FTP, HTTP, API, proxy, UPnP e bandwidth-server. Ativa SSH com criptografia forte.</small></label>
+          <label class="opt"><input type="checkbox" data-bind="sec.restrictMac"><b>Restringir MAC-CLI/console Cisco e descoberta de vizinhos à gerência</b><small>Ative depois de confirmar o acesso pela VLAN de gerência.</small></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>Novo usuário administrador</span><input type="text" data-bind="sec.user" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Senha do novo usuário</span><input type="password" data-bind="sec.pass" autocomplete="new-password"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="sec.disableAdmin"><b>Desativar o usuário admin padrão</b><small>Exige um novo usuário. Entre com ele e confirme o acesso antes de encerrar a sessão do admin.</small></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Monitoramento e backup</h2>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="snmp.enabled"><b>SNMP v2c somente leitura</b><small>Para consulta por Zabbix, LibreNMS e similares.</small></label>
+        </div>
+        <div class="row" data-when="snmp.enabled">
+          <label class="f"><span>Comunidade</span><input type="text" data-bind="snmp.community" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Servidor de monitoramento (IP)</span><input type="text" data-bind="snmp.host" placeholder="10.0.20.15" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Local</span><input type="text" data-bind="snmp.location" autocomplete="off"></label>
+          <label class="f"><span>Contato</span><input type="text" data-bind="snmp.contact" autocomplete="off"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="syslog.enabled"><b>Enviar logs para um servidor syslog</b><small>UDP 514 com eventos info, warning, error e critical.</small></label>
+        </div>
+        <div class="row" data-when="syslog.enabled">
+          <label class="f"><span>Servidor syslog (IP)</span><input type="text" data-bind="syslog.host" placeholder="10.0.20.16" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="backup"><b>Backup diário às 03:00</b><small>Salva um arquivo .backup e um .rsc no próprio roteador. Copie-os para fora do equipamento.</small></label>
+        </div>
+      </section>
+
+      <section class="howto">
+        <h2>Como aplicar</h2>
+        <ol>
+          <li>Se o roteador está em produção, faça backup antes: <code class="inl">/system backup save</code>.</li>
+          <li>O script parte de um roteador zerado. Para zerar: <code class="inl">apague a configuração somente se isso for realmente necessário</code>.</li>
+          <li>Conecte pelo CLI/console Cisco (por MAC) numa porta que ficará como acesso à VLAN de gerência e ative o Modo Seguro (<code class="inl">Ctrl+X</code> no terminal). Se a conexão cair, o roteador desfaz as mudanças.</li>
+          <li>Salve o texto como <code class="inl">config.txt</code>, arraste o arquivo para <em>Files</em> no CLI/console Cisco e execute <code class="inl">/import file-name=config.txt verbose=yes</code>. Colar direto no terminal pode truncar scripts longos.</li>
+          <li>Confirme o acesso pela VLAN de gerência, saia do Modo Seguro e troque a senha do admin, se não criou outro usuário.</li>
+        </ol>
+      </section>
+    </div>
+
+    <aside class="out" aria-label="Script gerado">
+      <div class="issues" id="issues" aria-live="polite"></div>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="name" id="fname">config.txt</span>
+          <span class="status" id="status"></span>
+          <label class="chip"><input type="checkbox" data-bind="noAccents"><span>Sem acentos nos comentários</span></label>
+          <button type="button" class="btn primary small js-copy">Copiar script</button>
+        </div>
+        <pre id="code" tabindex="0" aria-label="Configuração Cisco gerada"></pre>
+      </div>
+    </aside>
+  </div>
+
+  </div>
+  <div class="mbar">
+  <span id="mStatus"></span>
+  <button type="button" class="btn primary js-copy">Copiar script</button>
+</div>
+</div>
+
+<div id="app-mikrotik" class="app-panel">
+  <div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Gerador de configuração MikroTik</h1>
+      <p class="lead">Defina portas, VLANs, WAN e segurança. O script RouterOS aparece ao lado, pronto para importar.</p>
+    </div>
+    <button type="button" class="btn" id="reset">Restaurar exemplo</button>
+  </header>
+
+  <div class="grid">
+    <div class="form">
+
+      <section>
+        <h2>Equipamento</h2>
+        <div class="row">
+          <label class="f"><span>Modelo</span><select data-bind="model" id="model"></select></label>
+          <label class="f" data-when="model=custom"><span>Quantidade de portas ether</span><input type="number" min="2" max="48" data-bind="customCount"></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>Identidade do roteador</span><input type="text" data-bind="identity" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Fuso horário</span><select data-bind="tz" id="tz"></select></label>
+          <div>
+            <span class="seg-title">Versão do RouterOS</span>
+            <div class="seg" role="radiogroup" aria-label="Versão do RouterOS">
+              <label><input type="radio" name="m_ros" value="7" data-bind="ros"><span>7.x</span></label>
+              <label><input type="radio" name="m_ros" value="6" data-bind="ros"><span>6.49</span></label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Portas</h2>
+        <p class="hint">Clique numa porta e escolha a função. A cor de cada porta de acesso é a cor da VLAN.</p>
+        <div class="chassis" role="group" aria-label="Portas do roteador">
+          <div class="plate"><b id="plateName"></b><small id="plateSub"></small></div>
+          <div class="ports" id="ports"></div>
+        </div>
+        <div class="pedit">
+          <div class="ptitle">Porta <strong id="peName"></strong></div>
+          <div>
+            <span class="seg-title">Função</span>
+            <div class="seg" role="radiogroup" aria-label="Função da porta">
+              <label><input type="radio" name="m_prole" value="wan"><span>WAN</span></label>
+              <label><input type="radio" name="m_prole" value="wan2"><span>WAN 2</span></label>
+              <label><input type="radio" name="m_prole" value="trunk"><span>Tronco</span></label>
+              <label><input type="radio" name="m_prole" value="access"><span>Acesso</span></label>
+              <label><input type="radio" name="m_prole" value="unused"><span>Livre</span></label>
+            </div>
+          </div>
+          <label class="f" id="peVlanWrap"><span>VLAN de acesso</span><select id="peVlan"></select></label>
+          <label class="f"><span>Descrição (opcional)</span><input type="text" id="peNote" placeholder="Ex.: uplink do switch de core" autocomplete="off"></label>
+        </div>
+        <div class="legend" aria-hidden="true">
+          <span><i style="--c:var(--wan)"></i>WAN: saída para a Internet</span>
+          <span><i style="--c:var(--wan2)"></i>WAN 2: failover</span>
+          <span><i style="--c:var(--trunk)"></i>Tronco: todas as VLANs com tag</span>
+          <span><i style="--c:var(--accent)"></i>Acesso: uma VLAN sem tag</span>
+          <span><i class="dash"></i>Livre: porta desativada</span>
+        </div>
+      </section>
+
+      <section>
+        <h2>VLANs</h2>
+        <p class="hint">Isolada não inicia conexões com outras VLANs. Compartilhada pode ser acessada por todas (ex.: servidores). A VLAN de gerência administra o roteador e acessa todas.</p>
+        <div id="vlanList"></div>
+        <button type="button" class="btn add-vlan" id="addVlan">Adicionar VLAN</button>
+      </section>
+
+      <section>
+        <h2>Internet (WAN)</h2>
+        <div>
+          <span class="seg-title">Tipo de conexão</span>
+          <div class="seg" role="radiogroup" aria-label="Tipo de conexão WAN">
+            <label><input type="radio" name="m_wantype" value="dhcp" data-bind="wan.type"><span>DHCP</span></label>
+            <label><input type="radio" name="m_wantype" value="static" data-bind="wan.type"><span>IP fixo</span></label>
+            <label><input type="radio" name="m_wantype" value="pppoe" data-bind="wan.type"><span>PPPoE</span></label>
+          </div>
+        </div>
+        <div class="row" data-when="wan.type=static">
+          <label class="f"><span>Endereço IP com máscara</span><input type="text" data-bind="wan.ip" placeholder="200.10.20.2/30" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Gateway</span><input type="text" data-bind="wan.gw" placeholder="200.10.20.1" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="row" data-when="wan.type=pppoe">
+          <label class="f"><span>Usuário PPPoE</span><input type="text" data-bind="wan.user" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Senha PPPoE</span><input type="password" data-bind="wan.pass" autocomplete="new-password"></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>VLAN da WAN (opcional)</span><input type="text" inputmode="numeric" data-bind="wan.vlan" placeholder="Deixe vazio se a operadora entrega sem tag" autocomplete="off"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="wan.nat"><b>NAT de saída (masquerade)</b><small>Traduz os endereços das VLANs para o IP da WAN.</small></label>
+        </div>
+      </section>
+
+      <section id="failoverSection" hidden>
+        <h2>Failover (<span id="failoverPortName"></span>)</h2>
+        <p class="hint">A WAN principal tem prioridade; esta porta assume automaticamente quando a principal cai. Se as duas forem DHCP ou PPPoE, a troca ocorre quando a interface ou a sessão cai — não quando o link continua ligado mas sem Internet. Para detectar isso de forma confiável, use IP fixo em pelo menos uma das duas.</p>
+        <div>
+          <span class="seg-title">Tipo de conexão</span>
+          <div class="seg" role="radiogroup" aria-label="Tipo de conexão WAN 2">
+            <label><input type="radio" name="m_wan2type" value="dhcp" data-bind="wan2.type"><span>DHCP</span></label>
+            <label><input type="radio" name="m_wan2type" value="static" data-bind="wan2.type"><span>IP fixo</span></label>
+            <label><input type="radio" name="m_wan2type" value="pppoe" data-bind="wan2.type"><span>PPPoE</span></label>
+          </div>
+        </div>
+        <div class="row" data-when="wan2.type=static">
+          <label class="f"><span>Endereço IP com máscara</span><input type="text" data-bind="wan2.ip" placeholder="200.10.30.2/30" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Gateway</span><input type="text" data-bind="wan2.gw" placeholder="200.10.30.1" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="row" data-when="wan2.type=pppoe">
+          <label class="f"><span>Usuário PPPoE</span><input type="text" data-bind="wan2.user" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Senha PPPoE</span><input type="password" data-bind="wan2.pass" autocomplete="new-password"></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>VLAN da WAN 2 (opcional)</span><input type="text" inputmode="numeric" data-bind="wan2.vlan" placeholder="Deixe vazio se a operadora entrega sem tag" autocomplete="off"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="failover.checkGateway"><b>Verificar o gateway com ping</b><small>Nas WANs de IP fixo, some a rota se o gateway parar de responder. Vale mesmo sem falha de link.</small></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>DNS e horário</h2>
+        <div class="row">
+          <label class="f"><span>Servidores DNS (separados por vírgula)</span><input type="text" data-bind="dns.servers" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Servidores NTP</span><input type="text" data-bind="dns.ntp" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="dns.local"><b>Roteador como DNS das VLANs</b><small>Os clientes DHCP usam o gateway como servidor DNS (cache local).</small></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Segurança</h2>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="sec.firewall"><b>Firewall base e políticas das VLANs</b><small>Bloqueia entrada pela WAN e aplica Internet, isolamento e compartilhamento definidos em cada VLAN.</small></label>
+          <label class="opt" data-when="sec.firewall"><input type="checkbox" data-bind="sec.fasttrack"><b>FastTrack</b><small>Acelera conexões já estabelecidas. Desative se usar filas (queues) ou mangle.</small></label>
+          <label class="opt" data-when="sec.firewall"><input type="checkbox" data-bind="sec.mgmtAll"><b>Gerência acessa todas as VLANs</b><small>Libera o tráfego da VLAN de gerência para as demais, mesmo as isoladas.</small></label>
+          <label class="opt"><input type="checkbox" data-bind="sec.restrictMgmt"><b>Restringir o acesso ao roteador à gerência</b><small>Winbox e SSH só respondem à VLAN de gerência e às redes extras abaixo.</small></label>
+        </div>
+        <div class="sub" data-when="sec.restrictMgmt">
+          <label class="f"><span>Redes extras com acesso (VPN, equipe de TI)</span><input type="text" data-bind="sec.extraNets" placeholder="172.16.5.0/24, 192.168.88.10" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="sec.disableServices"><b>Desativar serviços inseguros</b><small>Telnet, FTP, HTTP, API, proxy, UPnP e bandwidth-server. Ativa SSH com criptografia forte.</small></label>
+          <label class="opt"><input type="checkbox" data-bind="sec.restrictMac"><b>Restringir MAC-Winbox e descoberta de vizinhos à gerência</b><small>Ative depois de confirmar o acesso pela VLAN de gerência.</small></label>
+        </div>
+        <div class="row">
+          <label class="f"><span>Novo usuário administrador</span><input type="text" data-bind="sec.user" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Senha do novo usuário</span><input type="password" data-bind="sec.pass" autocomplete="new-password"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="sec.disableAdmin"><b>Desativar o usuário admin padrão</b><small>Exige um novo usuário. Entre com ele e confirme o acesso antes de encerrar a sessão do admin.</small></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Monitoramento e backup</h2>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="snmp.enabled"><b>SNMP v2c somente leitura</b><small>Para consulta por Zabbix, LibreNMS e similares.</small></label>
+        </div>
+        <div class="row" data-when="snmp.enabled">
+          <label class="f"><span>Comunidade</span><input type="text" data-bind="snmp.community" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Servidor de monitoramento (IP)</span><input type="text" data-bind="snmp.host" placeholder="10.0.20.15" autocomplete="off" spellcheck="false"></label>
+          <label class="f"><span>Local</span><input type="text" data-bind="snmp.location" autocomplete="off"></label>
+          <label class="f"><span>Contato</span><input type="text" data-bind="snmp.contact" autocomplete="off"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="syslog.enabled"><b>Enviar logs para um servidor syslog</b><small>UDP 514 com eventos info, warning, error e critical.</small></label>
+        </div>
+        <div class="row" data-when="syslog.enabled">
+          <label class="f"><span>Servidor syslog (IP)</span><input type="text" data-bind="syslog.host" placeholder="10.0.20.16" autocomplete="off" spellcheck="false"></label>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" data-bind="backup"><b>Backup diário às 03:00</b><small>Salva um arquivo .backup e um .rsc no próprio roteador. Copie-os para fora do equipamento.</small></label>
+        </div>
+      </section>
+
+      <section class="howto">
+        <h2>Como aplicar</h2>
+        <ol>
+          <li>Se o roteador está em produção, faça backup antes: <code class="inl">/system backup save</code>.</li>
+          <li>O script parte de um roteador zerado. Para zerar: <code class="inl">/system reset-configuration no-defaults=yes skip-backup=yes</code>.</li>
+          <li>Conecte pelo Winbox (por MAC) numa porta que ficará como acesso à VLAN de gerência e ative o Modo Seguro (<code class="inl">Ctrl+X</code> no terminal). Se a conexão cair, o roteador desfaz as mudanças.</li>
+          <li>Salve o texto como <code class="inl">config.rsc</code>, arraste o arquivo para <em>Files</em> no Winbox e execute <code class="inl">/import file-name=config.rsc verbose=yes</code>. Colar direto no terminal pode truncar scripts longos.</li>
+          <li>Confirme o acesso pela VLAN de gerência, saia do Modo Seguro e troque a senha do admin, se não criou outro usuário.</li>
+        </ol>
+      </section>
+    </div>
+
+    <aside class="out" aria-label="Script gerado">
+      <div class="issues" id="issues" aria-live="polite"></div>
+      <div class="codewrap">
+        <div class="codebar">
+          <span class="name" id="fname">config.rsc</span>
+          <span class="status" id="status"></span>
+          <label class="chip"><input type="checkbox" data-bind="noAccents"><span>Sem acentos nos comentários</span></label>
+          <button type="button" class="btn primary small js-copy">Copiar script</button>
+        </div>
+        <pre id="code" tabindex="0" aria-label="Script RouterOS gerado"></pre>
+      </div>
+    </aside>
+  </div>
+
+  </div>
+  <div class="mbar">
+  <span id="mStatus"></span>
+  <button type="button" class="btn primary js-copy">Copiar script</button>
+</div>
+</div>
+
+<script>
+
+(function(){
+'use strict';
+
+/* ================= utilidades ================= */
+var STORE='ciscogen.v3';
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function strip(t){return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function clean(t){return String(t==null?'':t).replace(/[\r\n]+/g,' ');}
+function qs(t){return '"'+clean(t).replace(/[\\"$\[?]/g,function(m){return '\\'+m;})+'"';}
+function bv(t){t=clean(t);return /^[A-Za-z0-9_.:\/@,+-]+$/.test(t)?t:qs(t);}
+function slug(t){return strip(t||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+function plural(n,a,b){return n+' '+(n===1?a:b);}
+
+function ip2int(s){
+  var m=String(s).trim().match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if(!m) return null;
+  var o=m.slice(1).map(Number);
+  if(o.some(function(n){return n>255;})) return null;
+  return o[0]*16777216+o[1]*65536+o[2]*256+o[3];
+}
+function int2ip(n){return [Math.floor(n/16777216)%256,Math.floor(n/65536)%256,Math.floor(n/256)%256,n%256].join('.');}
+function parseCidr(s){
+  var m=String(s).trim().match(/^(\d{1,3}(?:\.\d{1,3}){3})\/(\d{1,2})$/);
+  if(!m) return null;
+  var ip=ip2int(m[1]), p=+m[2];
+  if(ip===null||p<8||p>30) return null;
+  var size=Math.pow(2,32-p), net=Math.floor(ip/size)*size;
+  return {ip:ip,prefix:p,net:net,size:size,bcast:net+size-1};
+}
+function parseIfAddr(s){
+  var m=String(s).trim().match(/^(\d{1,3}(?:\.\d{1,3}){3})\/(\d{1,2})$/);
+  if(!m||ip2int(m[1])===null||+m[2]<1||+m[2]>32) return null;
+  return {ip:m[1],prefix:+m[2]};
+}
+function okNet(x){
+  var m=String(x).trim().match(/^(\d{1,3}(?:\.\d{1,3}){3})(?:\/(\d{1,2}))?$/);
+  return !!(m&&ip2int(m[1])!==null&&(m[2]===undefined||+m[2]<=32));
+}
+function splitList(t){return String(t||'').split(/[,;\s]+/).map(function(x){return x.trim();}).filter(Boolean);}
+
+/* ================= modelos e estado ================= */
+var MODELS={
+  c9200:{label:'Cisco Catalyst 9200 · 24 portas',short:'C9200',eth:24,sfp:[]},
+  c9300:{label:'Cisco Catalyst 9300 · 48 portas',short:'C9300',eth:48,sfp:[]},
+  c9500:{label:'Cisco Catalyst 9500 · 24 portas',short:'C9500',eth:24,sfp:[]},
+  c8200:{label:'Cisco Catalyst 8200 · 8 portas',short:'C8200',eth:8,sfp:[]},
+  isr1100:{label:'Cisco ISR 1100 · 8 portas',short:'ISR1100',eth:8,sfp:[]},
+  custom:{label:'Outro · definir o número de portas',short:'Personalizado',eth:8,sfp:[]}
+};
+var VLAN_COLORS=['#1d6fb8','#127a6b','#7443c2','#b83263','#9a5a0c','#3a7a1f','#0a7391','#a13b25','#5063c4','#75751a'];
+var TZ=[['America/Sao_Paulo','Brasília (America/Sao_Paulo)'],['America/Fortaleza','America/Fortaleza'],['America/Recife','America/Recife'],['America/Maceio','America/Maceio'],['America/Bahia','America/Bahia'],['America/Belem','America/Belem'],['America/Manaus','America/Manaus'],['America/Cuiaba','America/Cuiaba'],['America/Campo_Grande','America/Campo_Grande'],['America/Rio_Branco','America/Rio_Branco'],['America/Campo_Grande','America/Campo_Grande'],['America/Noronha','America/Noronha']];
+function portNames(s){
+  var m=MODELS[s.model]||MODELS.c9300;
+  var n=s.model==='custom'?Math.max(2,Math.min(48,parseInt(s.customCount,10)||24)):m.eth;
+  var a=[]; for(var i=1;i<=n;i++) a.push('Gi1/0/'+i);
+  return a.concat(m.sfp||[]);
+}
+function ensurePorts(s){
+  var names=portNames(s), next={};
+  names.forEach(function(n,i){
+    next[n]=s.ports[n]||(i===0?{role:'wan'}:i===1?{role:'trunk'}:(i===2&&s.mgmtUid)?{role:'access',vlan:s.mgmtUid}:{role:'unused'});
+  });
+  s.ports=next;
+}
+function newVlan(s,over){
+  var uid=s.nextUid++;
+  return Object.assign({uid:uid,id:10,name:'',cidr:'',gw:'',pool:'',helper:'',dhcp:true,internet:true,
+    color:VLAN_COLORS[(uid-1)%VLAN_COLORS.length]},over||{});
+}
+function defaultState(){
+  var s={
+    v:1,ros:'xe',model:'c9300',customCount:24,identity:'SW-CORE-01',tz:'America/Sao_Paulo',
+    nextUid:1,nextAclUid:1,vlans:[],mgmtUid:null,ports:{},
+    wan:{type:'dhcp',vlan:'',ip:'',gw:'',user:'',pass:'',nat:true},
+    wan2:{type:'dhcp',vlan:'',ip:'',gw:'',user:'',pass:''},
+    failover:{checkGateway:true},
+    dns:{servers:'1.1.1.1,8.8.8.8',local:true,ntp:'a.st1.ntp.br,b.st1.ntp.br'},
+    sec:{firewall:true,fasttrack:false,restrictMgmt:true,extraNets:'',disableServices:true,restrictMac:false,user:'',pass:'',disableAdmin:false},
+    snmp:{enabled:false,version:'2c',community:'',host:'',location:'',contact:'',v3user:'',v3pass:''},
+    syslog:{enabled:false,host:'',host2:'',severity:'informational'},
+    backup:{enabled:false,writeMemory:true,path:'flash:archive-config'},
+    profile:'custom',
+    stp:{mode:'rapid-pvst',priority:32768,rootVlans:''},
+    switching:{trunkNonegotiate:true,accessPortfast:true,bpduGuard:true,portSecurity:false,voiceVlan:false,voiceVlanId:'70',maxMac:2,storm:'',dhcpSnooping:false,dai:false,ipSourceGuard:false,dot1x:false,nativeVlan:'',allowedVlans:'',},
+    lacp:{enabled:false,id:1,members:''},
+    routing:{staticRoutes:'',ospf:{enabled:false,process:1,routerId:'',networks:'',defaultOriginate:false},ipSla:{enabled:false,target:'8.8.8.8',frequency:5,track:1}},
+    acls:[],
+    aaa:{mode:'local',server:'',key:''},
+    monitor:{sourceInterface:''},
+    noAccents:true
+  };
+  function mk(id,name,o){s.vlans.push(newVlan(s,Object.assign({id:id,name:name,cidr:'10.0.'+id+'.0/24'},o)));}
+  mk(10,'Gerência',{}); mk(20,'Servidores',{dhcp:false}); mk(30,'Assistencial',{}); mk(40,'Administrativo',{}); mk(50,'Wi-Fi visitantes',{}); mk(60,'CFTV',{internet:false}); mk(70,'VoIP',{});
+  s.mgmtUid=s.vlans[0].uid; ensurePorts(s); return s;
+}
+
+/* ================= geração da configuração Cisco ================= */
+function build(s){
+  var issues=[], out=[];
+  function E(m){issues.push({lv:'erro',m:m});}
+  function W(m){issues.push({lv:'aviso',m:m});}
+  function fix(t){return s.noAccents?strip(t):String(t==null?'':t);}
+  function H(t){out.push('! '+fix(t));}
+  function P(){for(var i=0;i<arguments.length;i++) out.push(arguments[i]);}
+  function S(t){out.push('!','! --- '+fix(t)+' ---');}
+  function q(t){return String(t||'').replace(/\\/g,'\\\\').replace(/"/g,'\\"');}
+  function ipParts(c){var m=String(c||'').trim().match(/^(\d+\.\d+\.\d+\.\d+)\/(\d+)$/); if(!m)return null; var p=+m[2]; if(p<0||p>32)return null; var a=m[1].split('.').map(Number); if(a.some(function(n){return n>255;}))return null; var mask=[0,0,0,0],bits=p; for(var i=0;i<4;i++){var b=Math.min(8,bits); mask[i]=b?256-Math.pow(2,8-b):0; bits-=b;} return {ip:m[1],prefix:p,mask:mask.join('.')};}
+  function cidrNet(c){var x=ipParts(c); if(!x)return null; var a=x.ip.split('.').map(Number),m=x.mask.split('.').map(Number); return a.map(function(v,i){return v&m[i];}).join('.');}
+  function wildcard(c){var x=ipParts(c); if(!x)return null; return x.mask.split('.').map(function(v){return 255-v;}).join('.');}
+  function nextIp(c){var x=ipParts(c); if(!x)return null; var a=x.ip.split('.').map(Number); a[3]++; for(var i=3;i>=0;i--){if(a[i]>255){a[i]=0;if(i>0)a[i-1]++;}} return a.join('.');}
+  function validIp(x){return /^\d{1,3}(\.\d{1,3}){3}$/.test(String(x||'')) && String(x).split('.').every(function(n){return +n<=255;});}
+  function routeLines(txt){return String(txt||'').split(/\n+/).map(function(x){return x.trim();}).filter(Boolean);}
+  var names=portNames(s), vlans=s.vlans.map(function(x){return Object.assign({},x,{iface:'Vlan'+x.id});}), byUid={};
+  vlans.forEach(function(v){byUid[v.uid]=v;});
+  var wan=names.find(function(n){return s.ports[n]&&s.ports[n].role==='wan';})||null;
+  var wan2=names.find(function(n){return s.ports[n]&&s.ports[n].role==='wan2';})||null;
+  var trunk=names.filter(function(n){return s.ports[n]&&s.ports[n].role==='trunk';});
+  var access=names.filter(function(n){return s.ports[n]&&s.ports[n].role==='access';});
+  var lacpMembers=s.lacp.enabled?splitList(s.lacp.members):[];
+  var lacpMap={}; lacpMembers.forEach(function(n){lacpMap[n]=true;});
+  var mg=byUid[s.mgmtUid];
+  if(!vlans.length) E('Adicione pelo menos uma VLAN.');
+  if(!wan && (s.profile==='edge'||s.wan.type)) W('Nenhuma porta WAN foi definida.');
+  if(!mg) W('Nenhuma VLAN de gerencia foi definida.');
+  var ids={};
+  vlans.forEach(function(v){
+    if(!v.id||v.id<1||v.id>4094) E('VLAN com ID fora de 1-4094: '+v.id+'.');
+    if(ids[v.id]) E('VLAN ID duplicada: '+v.id+'.'); ids[v.id]=1;
+    if(!ipParts(v.cidr)) E('CIDR invalido na VLAN '+v.id+' ('+v.name+').');
+    if(v.gw&&!validIp(v.gw)) E('Gateway invalido na VLAN '+v.id+'.');
+    splitList(v.helper).forEach(function(h){if(!validIp(h)) E('IP Helper invalido na VLAN '+v.id+': '+h+'.');});
+  });
+  if(s.switching.voiceVlan && (!s.switching.voiceVlanId || +s.switching.voiceVlanId<1 || +s.switching.voiceVlanId>4094)) E('VLAN de voz invalida.');
+  if(s.lacp.enabled){if(!s.lacp.members) E('LACP habilitado sem portas membros.'); if(!s.lacp.id) E('Informe o ID do Port-channel.');}
+  if(s.routing.ipSla.enabled && (!validIp(s.routing.ipSla.target) || !s.routing.ipSla.frequency)) E('IP SLA requer alvo IPv4 e frequencia validos.');
+  if(s.routing.ipSla.enabled && s.wan.type!=='static') W('IP SLA foi habilitado, mas a WAN principal nao e IP fixo; revise a rota default obtida dinamicamente antes de aplicar o failover.');
+  if(s.switching.dhcpSnooping&&!s.switching.dai) W('DHCP Snooping esta ativo sem DAI; isso e permitido, mas DAI normalmente depende da base de bindings.');
+  if(s.switching.dot1x && s.aaa.mode==='local') W('802.1X normalmente requer AAA/RADIUS; o perfil atual esta em AAA local.');
+  if(s.profile==='access' && !trunk.length) W('Perfil Access selecionado sem nenhuma porta trunk.');
+
+  H('TIPO DE EQUIPAMENTO: '+(MODELS[s.model]?MODELS[s.model].label:s.model));
+  H('ARQUITETURA / PERFIL: '+(s.profile||'custom'));
+  H('PLATAFORMA: '+(s.ros==='ios'?'Cisco IOS':'Cisco IOS XE'));
+  H('Cisco IOS / IOS XE - configuracao gerada');
+  H('Hostname: '+(s.identity||'SW-CORE-01'));
+  H('Revise comandos especificos do modelo e a topologia antes de aplicar.');
+  P('hostname '+q(s.identity||'SW-CORE-01'),'no ip domain-lookup');
+  if(s.model==='c9200'||s.model==='c9300'||s.model==='c9500'||s.profile==='core') P('ip routing');
+  if(s.tz==='America/Sao_Paulo') P('clock timezone BRT -3 0');
+
+  S('STP');
+  P('spanning-tree mode '+(s.stp.mode||'rapid-pvst'));
+  if(+s.stp.priority>=0) P('spanning-tree vlan '+(s.stp.rootVlans||vlans.map(function(v){return v.id;}).join(','))+' priority '+(+s.stp.priority||32768));
+  if(s.stp.rootVlans.trim()) P('spanning-tree vlan '+s.stp.rootVlans+' root primary');
+
+  S('Portas fisicas');
+  names.forEach(function(n){
+    if(lacpMap[n]) return;
+    var p=s.ports[n]||{}, customDesc=String(p.note||'').trim();
+    if(p.role==='unused') P('interface '+n,' shutdown',' exit');
+    else if(p.role==='access'){
+      var v=byUid[p.vlan];
+      if(v){
+        var desc=customDesc||('ACCESS '+fix(v.name||('VLAN '+v.id)));
+        P('interface '+n,' description '+fix(desc),' switchport mode access',' switchport access vlan '+v.id);
+        if(s.switching.voiceVlan) P(' switchport voice vlan '+(+s.switching.voiceVlanId||70));
+        if(s.switching.accessPortfast) P(' spanning-tree portfast');
+        if(s.switching.bpduGuard) P(' spanning-tree bpduguard enable');
+        if(s.switching.portSecurity){P(' switchport port-security',' switchport port-security maximum '+(+s.switching.maxMac||2),' switchport port-security mac-address sticky',' switchport port-security violation restrict');}
+        if(s.switching.storm) P(' storm-control broadcast level '+s.switching.storm,' storm-control multicast level '+s.switching.storm,' storm-control action shutdown');
+        if(s.switching.ipSourceGuard) P(' ip verify source');
+        if(s.switching.dot1x) P(' authentication port-control auto',' dot1x pae authenticator');
+        P(' no shutdown',' exit');
+      }
+    } else if(p.role==='trunk'){
+      var descT=customDesc||'TRUNK', allowed=s.switching.allowedVlans||vlans.map(function(v){return v.id;}).join(',');
+      P('interface '+n,' description '+fix(descT),' switchport mode trunk',' switchport trunk allowed vlan '+allowed);
+      if(s.switching.nativeVlan) P(' switchport trunk native vlan '+s.switching.nativeVlan);
+      if(s.switching.trunkNonegotiate) P(' switchport nonegotiate');
+      P(' no shutdown',' exit');
+    } else if(p.role==='wan'||p.role==='wan2'){
+      var descW=customDesc||(p.role==='wan'?'WAN PRINCIPAL':'WAN 2 FAILOVER');
+      P('interface '+n,' description '+fix(descW),' no switchport',' no shutdown',' exit');
+    }
+  });
+
+  if(s.lacp.enabled){
+    S('EtherChannel / LACP');
+    var members=splitList(s.lacp.members);
+    P('interface range '+members.join(','),' channel-group '+(+s.lacp.id||1)+' mode active',' no shutdown',' exit');
+    P('interface Port-channel'+(+s.lacp.id||1),' description LACP PORT-CHANNEL '+(+s.lacp.id||1),' switchport mode trunk',' switchport trunk allowed vlan '+(s.switching.allowedVlans||vlans.map(function(v){return v.id;}).join(',')));
+    if(s.switching.nativeVlan) P(' switchport trunk native vlan '+s.switching.nativeVlan);
+    P(' no shutdown',' exit');
+  }
+
+  S('VLANs e SVIs');
+  vlans.forEach(function(v){P('vlan '+v.id,' name '+q(v.name||('VLAN-'+v.id)),' exit');});
+  vlans.forEach(function(v){
+    var x=ipParts(v.cidr), gw=v.gw||(x?nextIp(v.cidr):null); if(!gw||!x)return;
+    P('interface Vlan'+v.id,' description '+fix(v.name||('VLAN '+v.id)),' ip address '+gw+' '+x.mask);
+    splitList(v.helper).forEach(function(h){if(validIp(h)) P(' ip helper-address '+h);});
+    P(' no shutdown',' exit');
+  });
+
+  S('DHCP local');
+  vlans.filter(function(v){return v.dhcp;}).forEach(function(v){
+    var x=ipParts(v.cidr),gw=v.gw||(x?nextIp(v.cidr):null),net=cidrNet(v.cidr); if(!x||!gw||!net)return;
+    var exStart=net, exEnd=gw;
+    P('ip dhcp excluded-address '+exStart+' '+exEnd);
+    P('ip dhcp pool VLAN_'+v.id,' network '+net+' '+x.mask,' default-router '+gw,' dns-server '+(s.dns.servers||'1.1.1.1'),' exit');
+  });
+
+  S('WAN');
+  function wanConfig(iface,w,label){
+    if(!iface)return;
+    if(w.type==='static'){
+      var x=ipParts(w.ip); if(x) P('interface '+iface,' description '+label,' no switchport',' ip address '+x.ip+' '+x.mask,' no shutdown',' exit');
+      if(w.gw&&validIp(w.gw)&&!s.routing.ipSla.enabled) P('ip route 0.0.0.0 0.0.0.0 '+w.gw);
+    } else if(w.type==='dhcp') P('interface '+iface,' description '+label,' no switchport',' ip address dhcp',' no shutdown',' exit');
+    else {W(label+': PPPoE depende do modelo e da arquitetura do provedor; a interface PPP/Virtual-Template precisa ser ajustada manualmente.'); P('interface '+iface,' description '+label+' PPPoE - REVISAR',' no switchport',' no shutdown',' exit');}
+  }
+  wanConfig(wan,s.wan,'WAN PRINCIPAL'); wanConfig(wan2,s.wan2,'WAN 2 FAILOVER');
+
+  S('Rotas estaticas');
+  routeLines(s.routing.staticRoutes).forEach(function(line){var a=line.split(',').map(function(x){return x.trim();}); if(a.length<2){W('Rota estatica ignorada: '+line);return;} var x=ipParts(a[0]); if(!x||!validIp(a[1])){W('Rota estatica invalida: '+line);return;} P('ip route '+cidrNet(a[0])+' '+x.mask+' '+a[1]+(a[2]?' '+a[2]:''));});
+
+  if(s.routing.ipSla.enabled){
+    S('IP SLA e failover');
+    var sid=+s.routing.ipSla.track||1, freq=+s.routing.ipSla.frequency||5;
+    P('ip sla '+sid,' icmp-echo '+s.routing.ipSla.target+(wan?' source-interface '+wan:''),' frequency '+freq,' exit','ip sla schedule '+sid+' life forever start-time now');
+    P('track '+sid+' ip sla '+sid+' reachability');
+    if(s.wan.gw&&validIp(s.wan.gw)) P('ip route 0.0.0.0 0.0.0.0 '+s.wan.gw+' track '+sid);
+    if(s.wan2.gw&&validIp(s.wan2.gw)) P('ip route 0.0.0.0 0.0.0.0 '+s.wan2.gw+' 250');
+  } else if(wan2 && s.wan2.gw && validIp(s.wan2.gw)) P('ip route 0.0.0.0 0.0.0.0 '+s.wan2.gw+' 250');
+
+  S('NAT');
+  if(s.wan.nat&&wan){
+    P('ip access-list standard NAT_INSIDE');
+    vlans.filter(function(v){return v.internet!==false;}).forEach(function(v){var nx=cidrNet(v.cidr),nw=wildcard(v.cidr); if(nx&&nw)P(' permit '+nx+' '+nw);});
+    P(' exit','ip nat inside source list NAT_INSIDE interface '+wan+' overload');
+    vlans.forEach(function(v){P('interface Vlan'+v.id,' ip nat inside',' exit');});
+    P('interface '+wan,' ip nat outside',' exit'); if(wan2)P('interface '+wan2,' ip nat outside',' exit');
+  }
+
+  S('DHCP Snooping / DAI');
+  if(s.switching.dhcpSnooping){P('ip dhcp snooping'); P('ip dhcp snooping vlan '+vlans.map(function(v){return v.id;}).join(',')); trunk.concat(s.lacp.enabled?['Port-channel'+(+s.lacp.id||1)]:[]).forEach(function(n){P('interface '+n,' ip dhcp snooping trust',' exit');});}
+  if(s.switching.dai){P('ip arp inspection vlan '+vlans.map(function(v){return v.id;}).join(',')); trunk.concat(s.lacp.enabled?['Port-channel'+(+s.lacp.id||1)]:[]).forEach(function(n){P('interface '+n,' ip arp inspection trust',' exit');});}
+
+  S('DNS e NTP');
+  splitList(s.dns.servers).forEach(function(d){if(validIp(d))P('ip name-server '+d);});
+  splitList(s.dns.ntp).forEach(function(n){P('ntp server '+n);});
+  if(s.monitor.sourceInterface) P('logging source-interface '+s.monitor.sourceInterface,'snmp-server trap-source '+s.monitor.sourceInterface);
+
+  if(s.routing.ospf.enabled){
+    S('OSPF');
+    var proc=+s.routing.ospf.process||1; P('router ospf '+proc);
+    if(s.routing.ospf.routerId&&validIp(s.routing.ospf.routerId)) P(' router-id '+s.routing.ospf.routerId);
+    var ospfPassive=[];
+    routeLines(s.routing.ospf.networks).forEach(function(line){var a=line.split(',').map(function(x){return x.trim();}); var x=ipParts(a[0]),area=a[1]||'0'; if(!x){W('Rede OSPF invalida: '+line);return;} P(' network '+cidrNet(a[0])+' '+wildcard(a[0])+' area '+area); if(a[2]&&a[2].toLowerCase()==='passive') ospfPassive.push('Vlan'+(vlans.filter(function(v){return cidrNet(v.cidr)===cidrNet(a[0]);})[0]||{}).id);});
+    ospfPassive.filter(Boolean).forEach(function(ifn){P(' passive-interface '+ifn);});
+    if(s.routing.ospf.defaultOriginate) P(' default-information originate');
+    P(' exit');
+  }
+
+  if(s.acls&&s.acls.length){
+    S('ACLs personalizadas');
+    s.acls.forEach(function(a,idx){
+      var name=String(a.name||'ACL_'+(idx+1)).replace(/[^A-Za-z0-9_-]/g,'_');
+      P('ip access-list extended '+name);
+      String(a.rules||'').split(/\n+/).map(function(x){return x.trim();}).filter(Boolean).forEach(function(rule){P(' '+rule);});
+      P(' exit');
+      if(a.iface){P('interface '+a.iface,' ip access-group '+name+' '+(a.direction==='out'?'out':'in'),' exit');}
+      else W('ACL '+name+' foi criada, mas nao foi associada a uma interface.');
+    });
+  }
+
+  if(s.sec.firewall){
+    S('ACL e politicas entre VLANs');
+    vlans.forEach(function(v){
+      var acl='VLAN_'+v.id+'_IN'; P('ip access-list extended '+acl);
+      if(mg&&s.sec.mgmtAll){var mx=cidrNet(mg.cidr),mw=wildcard(mg.cidr); if(mx&&mw)P(' permit ip '+mx+' '+mw+' any');}
+      P(' permit ip any any',' exit','interface Vlan'+v.id,' ip access-group '+acl+' in',' exit');
+    });
+  }
+  if(s.sec.restrictMgmt&&mg){
+    S('Acesso de gerencia'); P('ip access-list standard MGMT_ONLY');
+    var mx=cidrNet(mg.cidr),mw=wildcard(mg.cidr); if(mx&&mw)P(' permit '+mx+' '+mw);
+    splitList(s.sec.extraNets).forEach(function(n){var z=ipParts(n); if(z)P(' permit '+cidrNet(n)+' '+wildcard(n));});
+    P(' exit','line vty 0 4',' access-class MGMT_ONLY in',' transport input ssh',' login local',' exit');
+  }
+
+  S('AAA / acesso');
+  if(s.aaa.mode==='tacacs'&&s.aaa.server){P('aaa new-model','tacacs server TACACS1',' address ipv4 '+s.aaa.server+(s.aaa.key?'':'') ,' key '+q(s.aaa.key||'TROQUE-ESTA-CHAVE'),' exit','aaa authentication login default group tacacs+ local','aaa authorization exec default group tacacs+ local');}
+  else if(s.aaa.mode==='radius'&&s.aaa.server){P('aaa new-model','radius server RADIUS1',' address ipv4 '+s.aaa.server,' key '+q(s.aaa.key||'TROQUE-ESTA-CHAVE'),' exit','aaa authentication login default group radius local','aaa authorization exec default group radius local');}
+  else if(s.aaa.mode==='local') P('aaa new-model','aaa authentication login default local','aaa authorization exec default local');
+  if(s.sec.user) P('username '+q(s.sec.user)+' privilege 15 secret '+q(s.sec.pass||'TROQUE-ESTA-SENHA'));
+  P('ip domain-name '+q((s.identity||'cisco.local').replace(/[^A-Za-z0-9.-]/g,'-')+'.local'),'crypto key generate rsa modulus 2048','ip ssh version 2');
+  if(s.sec.disableServices) P('no ip http server','no ip http secure-server','no ip source-route');
+
+  S('SNMP');
+  if(s.snmp.enabled){
+    if(s.snmp.version==='3' && s.snmp.v3user){P('snmp-server group NMS v3 priv','snmp-server user '+q(s.snmp.v3user)+' NMS v3 auth sha '+q(s.snmp.v3pass||'TROQUE-A-SENHA')+' priv aes 128 '+q(s.snmp.v3pass||'TROQUE-A-SENHA')); if(s.snmp.host)P('snmp-server host '+s.snmp.host+' version 3 priv '+q(s.snmp.v3user));}
+    else {P('snmp-server community '+q(s.snmp.community||'COMUNIDADE')+' RO'); if(s.snmp.host)P('snmp-server host '+s.snmp.host+' version 2c '+q(s.snmp.community||'COMUNIDADE'));}
+    if(s.snmp.location)P('snmp-server location '+q(s.snmp.location)); if(s.snmp.contact)P('snmp-server contact '+q(s.snmp.contact));
+  }
+
+  S('Syslog');
+  if(s.syslog.enabled){var sev=s.syslog.severity||'informational'; if(s.syslog.host)P('logging host '+s.syslog.host); if(s.syslog.host2)P('logging host '+s.syslog.host2); P('logging trap '+sev);}
+
+  if(s.switching.dot1x) P('dot1x system-auth-control');
+  if(s.backup.enabled){S('Backup / Archive'); P('archive',' path '+(s.backup.path||'flash:archive-config'),' maximum 14',' time-period 1440',' write-memory',' exit');}
+  S('Final'); if(s.backup.writeMemory)P('end','write memory'); else P('end'); H('Fim da configuracao.');
+  var errs=issues.filter(function(i){return i.lv==='erro';}), warns=issues.filter(function(i){return i.lv!=='erro';});
+  return {text:out.join('\n'),issues:errs.concat(warns),errors:errs.length,warnings:warns.length,lines:out.length};
+}
+
+/* ================= geração do script ================= */
+function vlanIface(id,name){
+  var base='vlan'+id, room=15-base.length-1;
+  var sl=slug(name).slice(0,Math.max(0,room)).replace(/-+$/,'');
+  return sl?base+'-'+sl:base;
+}
+
+/* ================= realce de sintaxe ================= */
+var VERBS={interface:1,description:1,hostname:1,vlan:1,router:1,ip:1,access:1,permit:1,deny:1,network:1,username:1,logging:1,snmp:1,ntp:1,no:1,shutdown:1,exit:1,end:1,write:1,spanning:1,switchport:1};
+function hl(line){
+  if(!line.trim()) return '';
+  if(/^\s*#/.test(line)) return '<span class="c">'+esc(line)+'</span>';
+  var toks=line.match(/[A-Za-z0-9_.-]+=(?:"(?:[^"\\]|\\.)*"|\S*)|"(?:[^"\\]|\\.)*"|\s+|\S+/g)||[];
+  var inPath=false, html='';
+  toks.forEach(function(t){
+    if(/^\s+$/.test(t)){html+=t;return;}
+    var kv=t.match(/^([A-Za-z0-9_.-]+)=([\s\S]*)$/);
+    if(kv){
+      inPath=false;
+      var val=kv[2], cls=val.charAt(0)==='"'?'s':(/^[\d.\/:,-]+$/.test(val)?'n':'');
+      html+='<span class="k">'+esc(kv[1])+'</span>='+(cls?'<span class="'+cls+'">'+esc(val)+'</span>':esc(val));
+      return;
+    }
+    if(t.charAt(0)==='/'){inPath=true;html+='<span class="p">'+esc(t)+'</span>';return;}
+    if(VERBS[t]===1){inPath=false;html+='<span class="v">'+esc(t)+'</span>';return;}
+    if(inPath){html+='<span class="p">'+esc(t)+'</span>';return;}
+    html+=esc(t);
+  });
+  return html;
+}
+
+/* ================= interface ================= */
+function init(){
+  var root=document.getElementById('app-cisco');
+  if(!root) return;
+  var $=function(s,el){return (el||root).querySelector(s);};
+  var $$=function(s,el){return Array.prototype.slice.call((el||root).querySelectorAll(s));};
+  var state=load(), sel=portNames(state)[0], lastText='';
+
+  function isObj(x){return x&&typeof x==='object'&&!Array.isArray(x);}
+  function merge(a,b){Object.keys(b).forEach(function(k){if(isObj(b[k])&&isObj(a[k])) merge(a[k],b[k]); else a[k]=b[k];});}
+  function load(){
+    var s=defaultState();
+    try{
+      var raw=localStorage.getItem(STORE);
+      if(raw){
+        var sv=JSON.parse(raw);
+        if(sv&&sv.v===1){
+          merge(s,sv);
+          if(Array.isArray(sv.vlans)) s.vlans=sv.vlans;
+          if(isObj(sv.ports)) s.ports=sv.ports;
+        }
+      }
+    }catch(e){}
+    if(!Array.isArray(s.acls)) s.acls=[];
+    if(!s.nextAclUid) s.nextAclUid=s.acls.reduce(function(m,a){return Math.max(m,+a.uid||0);},0)+1;
+    if(!s.vlans.some(function(x){return x.uid===s.mgmtUid;})) s.mgmtUid=s.vlans[0]?s.vlans[0].uid:null;
+    ensurePorts(s);
+    return s;
+  }
+  function save(){
+    try{
+      var c=JSON.parse(JSON.stringify(state));
+      c.wan.pass=''; c.wan2.pass=''; c.sec.pass=''; c.aaa.key=''; c.snmp.v3pass='';
+      localStorage.setItem(STORE,JSON.stringify(c));
+    }catch(e){}
+  }
+
+  function getP(o,p){return p.split('.').reduce(function(a,k){return a==null?a:a[k];},o);}
+  function setP(o,p,val){var ks=p.split('.'),last=ks.pop(),t=ks.reduce(function(a,k){return a[k];},o);t[last]=val;}
+  function readEl(el){
+    if(el.type==='checkbox') return el.checked;
+    if(el.type==='number') return el.value===''?'':Number(el.value);
+    return el.value;
+  }
+  function syncFromState(){
+    $$('[data-bind]').forEach(function(el){
+      var val=getP(state,el.dataset.bind);
+      if(el.type==='radio') el.checked=String(val)===el.value;
+      else if(el.type==='checkbox') el.checked=!!val;
+      else el.value=val==null?'':val;
+    });
+  }
+  function syncWhen(){
+    $$('[data-when]').forEach(function(el){
+      var parts=el.dataset.when.split('='), cur=getP(state,parts[0]);
+      el.hidden=!(parts.length<2?!!cur:String(cur)===parts[1]);
+    });
+  }
+
+  /* selects estáticos */
+  $('#model').innerHTML=Object.keys(MODELS).map(function(k){return '<option value="'+k+'">'+esc(MODELS[k].label)+'</option>';}).join('');
+  $('#tz').innerHTML=TZ.map(function(t){return '<option value="'+t[0]+'">'+esc(t[1])+'</option>';}).join('');
+
+  /* campos ligados ao estado */
+  function onBind(e){
+    var el=e.target; if(!el.dataset||!el.dataset.bind) return;
+    if(el.type==='radio'&&!el.checked) return;
+    setP(state,el.dataset.bind,readEl(el));
+    if(el.dataset.bind==='model'||el.dataset.bind==='customCount'){ensurePorts(state);renderPorts();renderAcls();}
+    update();
+  }
+  root.addEventListener('input',onBind);
+  root.addEventListener('change',onBind);
+
+  /* ---- portas ---- */
+  function shortName(n){return n.replace(/^ether/,'').replace(/^sfp-sfpplus/,'S+').replace(/^sfp/,'S');}
+  function renderPorts(){
+    ensurePorts(state);
+    var names=portNames(state);
+    if(names.indexOf(sel)<0) sel=names[0];
+    $('#plateName').textContent=MODELS[state.model].short;
+    $('#plateSub').textContent=names.length+' portas';
+    var sfpSeen=false;
+    $('#ports').innerHTML=names.map(function(n){
+      var p=state.ports[n], cls='unused', txt='Livre', full='livre', c='';
+      if(p.role==='wan'){cls='wan';txt='WAN';full='WAN';}
+      else if(p.role==='wan2'){cls='wan2';txt='WAN2';full='WAN 2 (failover)';}
+      else if(p.role==='trunk'){cls='trunk';txt='Tronco';full='tronco';}
+      else if(p.role==='access'){
+        var x=state.vlans.filter(function(y){return y.uid===p.vlan;})[0];
+        if(x){cls='access';txt='V'+x.id;full='acesso VLAN '+x.id;c=x.color;}
+      }
+      var isSfp=n.indexOf('sfp')===0, first=isSfp&&!sfpSeen; if(isSfp) sfpSeen=true;
+      return '<button type="button" class="port '+cls+(isSfp?' sfp':'')+(first?' sfp-first':'')+'" data-port="'+n+'" aria-pressed="'+(n===sel)+'" aria-label="'+n+': '+esc(full)+'" title="'+n+': '+esc(full)+'"'+(c?' style="--pc:'+c+'"':'')+
+        '><span class="jack"><i></i></span><span class="pn">'+shortName(n)+'</span><span class="pr">'+txt+'</span></button>';
+    }).join('');
+    syncEditor();
+  }
+  function syncEditor(){
+    var p=state.ports[sel]; if(!p) return;
+    $('#peName').textContent=sel;
+    $$('input[name=c_prole]').forEach(function(r){r.checked=(r.value===p.role);});
+    var vs=$('#peVlan');
+    vs.innerHTML=state.vlans.map(function(x){return '<option value="'+x.uid+'">'+esc('VLAN '+x.id+' · '+(x.name||'sem nome'))+'</option>';}).join('');
+    if(p.role==='access'&&p.vlan!=null) vs.value=String(p.vlan);
+    $('#peVlanWrap').hidden=p.role!=='access';
+    $('#peNote').value=p.note||'';
+  }
+  $('#ports').addEventListener('click',function(e){
+    var b=e.target.closest('.port'); if(!b) return;
+    sel=b.dataset.port; renderPorts();
+  });
+  $$('input[name=c_prole]').forEach(function(r){
+    r.addEventListener('change',function(){
+      if(!r.checked) return;
+      var p=state.ports[sel];
+      if(r.value==='wan'){Object.keys(state.ports).forEach(function(k){if(k!==sel&&state.ports[k].role==='wan') state.ports[k].role='unused';});}
+      if(r.value==='wan2'){Object.keys(state.ports).forEach(function(k){if(k!==sel&&state.ports[k].role==='wan2') state.ports[k].role='unused';});}
+      p.role=r.value;
+      if(r.value==='access'&&!state.vlans.some(function(x){return x.uid===p.vlan;})){
+        var f=state.vlans.filter(function(x){return x.uid===state.mgmtUid;})[0]||state.vlans[0];
+        p.vlan=f?f.uid:null;
+      }
+      renderPorts(); update();
+    });
+  });
+  $('#peVlan').addEventListener('change',function(e){state.ports[sel].vlan=+e.target.value; renderPorts(); update();});
+  $('#peNote').addEventListener('input',function(e){state.ports[sel].note=e.target.value; update();});
+
+  /* ---- ACLs personalizadas ---- */
+  var aclList=$('#aclList');
+  function aclInterfaces(){
+    var opts=[];
+    state.vlans.forEach(function(v){opts.push({v:'Vlan'+v.id,t:'SVI Vlan'+v.id+' - '+(v.name||('VLAN '+v.id))});});
+    portNames(state).forEach(function(n){opts.push({v:n,t:n});});
+    if(state.lacp&&state.lacp.enabled) opts.push({v:'Port-channel'+(+state.lacp.id||1),t:'Port-channel'+(+state.lacp.id||1)});
+    return opts;
+  }
+  function aclRow(a){
+    var opts=aclInterfaces().map(function(o){return '<option value="'+esc(o.v)+'"'+(o.v===a.iface?' selected':'')+'>'+esc(o.t)+'</option>';}).join('');
+    return '<div class="acl" data-aid="'+a.uid+'">'+
+      '<div class="acl-grid">'+
+      '<label class="f"><span>Nome da ACL</span><input type="text" data-af="name" value="'+esc(a.name||'ACL_'+a.uid)+'" autocomplete="off"></label>'+
+      '<label class="f"><span>Interface</span><select data-af="iface"><option value="">-- nao associar --</option>'+opts+'</select></label>'+
+      '<label class="f"><span>Sentido</span><select data-af="direction"><option value="in"'+(a.direction!=='out'?' selected':'')+'>IN</option><option value="out"'+(a.direction==='out'?' selected':'')+'>OUT</option></select></label>'+
+      '<button type="button" class="btn small danger acl-remove" data-acl-remove>Remover</button>'+
+      '</div>'+
+      '<label class="f"><span>Regras ACE (uma por linha)</span><textarea data-af="rules" rows="4" placeholder="permit tcp 10.0.10.0 0.0.0.255 any eq 443&#10;deny ip 10.0.50.0 0.0.0.255 10.0.0.0 0.255.255.255&#10;permit ip any any">'+esc(a.rules||'permit ip any any')+'</textarea></label>'+
+      '</div>';
+  }
+  function renderAcls(){
+    aclList.innerHTML=state.acls&&state.acls.length?state.acls.map(aclRow).join(''):'<p class="empty">Nenhuma ACL personalizada. As ACLs automaticas de isolamento continuam sendo geradas quando o firewall de VLANs esta ativo.</p>';
+  }
+  aclList.addEventListener('input',function(e){
+    var el=e.target,f=el.dataset&&el.dataset.af;if(!f)return;
+    var row=el.closest('.acl'),a=state.acls.filter(function(x){return x.uid===+row.dataset.aid;})[0];if(!a)return;
+    a[f]=el.value;update();
+  });
+  aclList.addEventListener('change',function(e){
+    var el=e.target,f=el.dataset&&el.dataset.af;if(!f)return;
+    var row=el.closest('.acl'),a=state.acls.filter(function(x){return x.uid===+row.dataset.aid;})[0];if(!a)return;
+    a[f]=el.value;update();
+  });
+  aclList.addEventListener('click',function(e){
+    var b=e.target.closest('[data-acl-remove]');if(!b)return;
+    var uid=+b.closest('.acl').dataset.aid;state.acls=state.acls.filter(function(x){return x.uid!==uid;});renderAcls();update();
+  });
+  $('#addAcl').addEventListener('click',function(){
+    var uid=(state.nextAclUid||1);state.nextAclUid=uid+1;
+    state.acls=state.acls||[];state.acls.push({uid:uid,name:'ACL_'+uid,iface:state.vlans[0]?('Vlan'+state.vlans[0].id):'',direction:'in',rules:'permit ip any any'});
+    renderAcls();update();
+    var el=aclList.querySelector('[data-aid="'+uid+'"] input[data-af="name"]');if(el){el.focus();el.select();}
+  });
+
+  /* ---- VLANs ---- */
+  var vlanList=$('#vlanList');
+  function vlanRow(x){
+    var a=function(s){return esc(s==null?'':s);};
+    return '<div class="vlan" data-uid="'+x.uid+'" style="--vc:'+x.color+'">'+
+      '<div class="vlan-main">'+
+        '<label class="f"><span>ID</span><input type="number" min="1" max="4094" data-vf="id" value="'+a(x.id)+'"></label>'+
+        '<label class="f"><span>Nome</span><input type="text" data-vf="name" value="'+a(x.name)+'" autocomplete="off"></label>'+
+        '<label class="f f-net"><span>Sub-rede</span><input type="text" data-vf="cidr" value="'+a(x.cidr)+'" placeholder="10.0.10.0/24" autocomplete="off" spellcheck="false"></label>'+
+        '<label class="f f-gw"><span>Gateway</span><input type="text" data-vf="gw" value="'+a(x.gw)+'" autocomplete="off" spellcheck="false"></label>'+
+        '<label class="f f-pool"><span>Faixa DHCP</span><input type="text" data-vf="pool" value="'+a(x.pool)+'" autocomplete="off" spellcheck="false"></label>'+
+        '<label class="f f-helper"><span>DHCP Relay / IP Helper (opcional)</span><textarea data-vf="helper" rows="2" placeholder="10.0.20.10&#10;10.0.20.11">'+a(x.helper)+'</textarea></label>'+
+      '</div>'+
+      '<div class="vlan-flags">'+
+        '<label class="chip" title="Atribui endereços por DHCP nesta VLAN"><input type="checkbox" data-vf="dhcp"'+(x.dhcp?' checked':'')+'><span>DHCP</span></label>'+
+        '<label class="chip" title="Permite sair para a Internet"><input type="checkbox" data-vf="internet"'+(x.internet?' checked':'')+'><span>Internet</span></label>'+
+        '<label class="chip" title="Administra o roteador e acessa todas as VLANs"><input type="radio" name="c_mgmt" data-vf="mgmt"'+(x.uid===state.mgmtUid?' checked':'')+'><span>Gerência</span></label>'+
+        '<span class="spacer"></span>'+
+        '<button type="button" class="btn small danger" data-remove aria-label="Remover VLAN '+a(x.id)+'">Remover</button>'+
+      '</div></div>';
+  }
+  function refreshPh(row){
+    var uid=+row.dataset.uid, x=state.vlans.filter(function(y){return y.uid===uid;})[0]; if(!x) return;
+    var c=parseCidr(x.cidr), gw=$('[data-vf=gw]',row), pl=$('[data-vf=pool]',row);
+    if(c){
+      var pa=c.net+10,pb=c.bcast-1; if(pa>pb) pa=c.net+2;
+      gw.placeholder='auto: '+int2ip(c.net+1); pl.placeholder='auto: '+int2ip(pa)+'-'+int2ip(pb);
+    } else {gw.placeholder='auto'; pl.placeholder='auto';}
+  }
+  function renderVlans(){
+    vlanList.innerHTML=state.vlans.length?state.vlans.map(vlanRow).join(''):'<p class="empty">Nenhuma VLAN ainda. Adicione a primeira para começar.</p>';
+    $$('.vlan',vlanList).forEach(refreshPh);
+  }
+  vlanList.addEventListener('input',function(e){
+    var el=e.target, f=el.dataset&&el.dataset.vf; if(!f) return;
+    var row=el.closest('.vlan'), uid=+row.dataset.uid;
+    var x=state.vlans.filter(function(y){return y.uid===uid;})[0]; if(!x) return;
+    if(f==='mgmt'){ if(el.checked) state.mgmtUid=uid; }
+    else if(el.type==='checkbox') x[f]=el.checked;
+    else x[f]=el.value;
+    if(f==='cidr') refreshPh(row);
+    if(f==='id'||f==='name'){renderPorts();renderAcls();}
+    update();
+  });
+  vlanList.addEventListener('click',function(e){
+    var b=e.target.closest('[data-remove]'); if(!b) return;
+    var uid=+b.closest('.vlan').dataset.uid;
+    state.vlans=state.vlans.filter(function(x){return x.uid!==uid;});
+    Object.keys(state.ports).forEach(function(k){var p=state.ports[k]; if(p.role==='access'&&p.vlan===uid){p.role='unused'; p.vlan=null;}});
+    if(state.mgmtUid===uid) state.mgmtUid=state.vlans[0]?state.vlans[0].uid:null;
+    renderVlans(); renderPorts(); renderAcls(); update();
+  });
+  $('#addVlan').addEventListener('click',function(){
+    var used={}; state.vlans.forEach(function(x){used[parseInt(x.id,10)]=1;});
+    var id=10; while(used[id]&&id<4094) id+=10;
+    var x=newVlan(state,{id:id,name:'Nova VLAN',cidr:'10.0.'+(id%256)+'.0/24'});
+    state.vlans.push(x);
+    if(state.mgmtUid==null) state.mgmtUid=x.uid;
+    renderVlans(); renderPorts(); renderAcls(); update();
+    var last=$$('.vlan [data-vf=name]',vlanList).pop(); if(last){last.focus(); last.select();}
+  });
+
+  /* ---- saída ---- */
+  function update(){
+    syncWhen();
+    var w2p=Object.keys(state.ports).filter(function(k){return state.ports[k].role==='wan2';})[0];
+    $('#failoverSection').hidden=!w2p;
+    if(w2p) $('#failoverPortName').textContent=w2p;
+    var r=build(state); lastText=r.text;
+    $('#code').innerHTML=r.text.split('\n').map(hl).join('\n');
+    $('#fname').textContent='config-'+(slug(state.identity)||'cisco')+'.cfg';
+    var st=plural(r.lines,'linha','linhas');
+    if(r.errors) st+=' · '+plural(r.errors,'erro','erros');
+    if(r.warnings) st+=' · '+plural(r.warnings,'aviso','avisos');
+    $('#status').textContent=st; $('#mStatus').textContent=st;
+    $('#issues').innerHTML=r.issues.length
+      ?'<ul>'+r.issues.map(function(i){return '<li class="'+i.lv+'"><b>'+(i.lv==='erro'?'Erro':'Atenção')+'</b>'+esc(i.m)+'</li>';}).join('')+'</ul>'
+      :'<p class="ok">Nenhum problema encontrado.</p>';
+    save();
+  }
+
+  function copyText(t){
+    function fallback(){
+      var ta=document.createElement('textarea'); ta.value=t; ta.setAttribute('readonly','');
+      ta.style.cssText='position:fixed;opacity:0;top:0;left:0'; document.body.appendChild(ta); ta.select();
+      var ok=false; try{ok=document.execCommand('copy');}catch(e){} ta.remove(); return ok;
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(t).then(function(){return true;},function(){return fallback();});
+    }
+    return Promise.resolve(fallback());
+  }
+  var copyTimer;
+  $$('.js-copy').forEach(function(b){
+    b.addEventListener('click',function(){
+      copyText(lastText).then(function(ok){
+        if(!ok){var rg=document.createRange(); rg.selectNodeContents($('#code')); var sl=getSelection(); sl.removeAllRanges(); sl.addRange(rg);}
+        $$('.js-copy').forEach(function(x){x.textContent=ok?'Copiado ✓':'Selecionado: use Ctrl+C';});
+        clearTimeout(copyTimer);
+        copyTimer=setTimeout(function(){$$('.js-copy').forEach(function(x){x.textContent='Copiar script';});},2200);
+      });
+    });
+  });
+
+  /* ---- restaurar ---- */
+  var armed=false, armT, rb=$('#reset');
+  rb.addEventListener('click',function(){
+    if(!armed){armed=true; rb.textContent='Confirmar: descartar alterações'; armT=setTimeout(function(){armed=false; rb.textContent='Restaurar exemplo';},4000); return;}
+    clearTimeout(armT); armed=false; rb.textContent='Restaurar exemplo';
+    state=defaultState(); sel=portNames(state)[0];
+    syncFromState(); renderVlans(); renderPorts(); renderAcls(); update();
+  });
+
+  syncFromState(); renderVlans(); renderPorts(); renderAcls(); update();
+}
+
+if(typeof module!=='undefined'&&module.exports){
+  module.exports={build:build,hl:hl,defaultState:defaultState,ensurePorts:ensurePorts,portNames:portNames,parseCidr:parseCidr,newVlan:newVlan};
+}
+window.__init_app_cisco = init;
+})();
+
+</script>
+<script>
+
+(function(){
+'use strict';
+
+/* ================= utilidades ================= */
+var STORE='mkgen.v1';
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function strip(t){return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function clean(t){return String(t==null?'':t).replace(/[\r\n]+/g,' ');}
+function qs(t){return '"'+clean(t).replace(/[\\"$\[?]/g,function(m){return '\\'+m;})+'"';}
+function bv(t){t=clean(t);return /^[A-Za-z0-9_.:\/@,+-]+$/.test(t)?t:qs(t);}
+function slug(t){return strip(t||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+function plural(n,a,b){return n+' '+(n===1?a:b);}
+
+function ip2int(s){
+  var m=String(s).trim().match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if(!m) return null;
+  var o=m.slice(1).map(Number);
+  if(o.some(function(n){return n>255;})) return null;
+  return o[0]*16777216+o[1]*65536+o[2]*256+o[3];
+}
+function int2ip(n){return [Math.floor(n/16777216)%256,Math.floor(n/65536)%256,Math.floor(n/256)%256,n%256].join('.');}
+function parseCidr(s){
+  var m=String(s).trim().match(/^(\d{1,3}(?:\.\d{1,3}){3})\/(\d{1,2})$/);
+  if(!m) return null;
+  var ip=ip2int(m[1]), p=+m[2];
+  if(ip===null||p<8||p>30) return null;
+  var size=Math.pow(2,32-p), net=Math.floor(ip/size)*size;
+  return {ip:ip,prefix:p,net:net,size:size,bcast:net+size-1};
+}
+function parseIfAddr(s){
+  var m=String(s).trim().match(/^(\d{1,3}(?:\.\d{1,3}){3})\/(\d{1,2})$/);
+  if(!m||ip2int(m[1])===null||+m[2]<1||+m[2]>32) return null;
+  return {ip:m[1],prefix:+m[2]};
+}
+function okNet(x){
+  var m=String(x).trim().match(/^(\d{1,3}(?:\.\d{1,3}){3})(?:\/(\d{1,2}))?$/);
+  return !!(m&&ip2int(m[1])!==null&&(m[2]===undefined||+m[2]<=32));
+}
+function splitList(t){return String(t||'').split(/[,;\s]+/).map(function(x){return x.trim();}).filter(Boolean);}
+
+/* ================= modelos e estado ================= */
+var MODELS={
+  hex:{label:'hEX / RB750Gr3 · 5 portas',short:'hEX',eth:5,sfp:[]},
+  rb3011:{label:'RB3011UiAS · 10 portas + SFP',short:'RB3011',eth:10,sfp:['sfp1']},
+  rb4011:{label:'RB4011iGS+ · 10 portas + SFP+',short:'RB4011',eth:10,sfp:['sfp-sfpplus1']},
+  rb5009:{label:'RB5009UG+S+ · 8 portas + SFP+',short:'RB5009',eth:8,sfp:['sfp-sfpplus1']},
+  ccr2004:{label:'CCR2004-16G-2S+ · 16 portas + 2 SFP+',short:'CCR2004',eth:16,sfp:['sfp-sfpplus1','sfp-sfpplus2']},
+  custom:{label:'Outro · definir o número de portas',short:'Personalizado',eth:8,sfp:[]}
+};
+var VLAN_COLORS=['#1d6fb8','#127a6b','#7443c2','#b83263','#9a5a0c','#3a7a1f','#0a7391','#a13b25','#5063c4','#75751a'];
+var TZ=[['America/Sao_Paulo','Brasília (America/Sao_Paulo)'],['America/Fortaleza','America/Fortaleza'],['America/Recife','America/Recife'],['America/Maceio','America/Maceio'],['America/Bahia','America/Bahia'],['America/Belem','America/Belem'],['America/Manaus','America/Manaus'],['America/Cuiaba','America/Cuiaba'],['America/Campo_Grande','America/Campo_Grande'],['America/Rio_Branco','America/Rio_Branco'],['America/Noronha','America/Noronha']];
+
+function portNames(s){
+  var m=MODELS[s.model]||MODELS.rb4011;
+  var n=s.model==='custom'?Math.max(2,Math.min(48,parseInt(s.customCount,10)||8)):m.eth;
+  var a=[]; for(var i=1;i<=n;i++) a.push('ether'+i);
+  return a.concat(m.sfp||[]);
+}
+function ensurePorts(s){
+  var names=portNames(s), next={};
+  names.forEach(function(n,i){
+    next[n]=s.ports[n]||(i===0?{role:'wan'}:i===1?{role:'trunk'}:(i===2&&s.mgmtUid)?{role:'access',vlan:s.mgmtUid}:{role:'unused'});
+  });
+  s.ports=next;
+}
+function newVlan(s,over){
+  var uid=s.nextUid++;
+  return Object.assign({uid:uid,id:10,name:'',cidr:'',gw:'',pool:'',dhcp:true,internet:true,isolate:false,shared:false,
+    color:VLAN_COLORS[(uid-1)%VLAN_COLORS.length]},over||{});
+}
+function defaultState(){
+  var s={
+    v:1,ros:'7',model:'rb4011',customCount:8,identity:'RT-CORE-01',tz:'America/Sao_Paulo',
+    nextUid:1,vlans:[],mgmtUid:null,ports:{},
+    wan:{type:'dhcp',vlan:'',ip:'',gw:'',user:'',pass:'',nat:true},
+    wan2:{type:'dhcp',vlan:'',ip:'',gw:'',user:'',pass:''},
+    failover:{checkGateway:true},
+    dns:{servers:'1.1.1.1,8.8.8.8',local:true,ntp:'a.st1.ntp.br,b.st1.ntp.br'},
+    sec:{firewall:true,fasttrack:true,mgmtAll:true,restrictMgmt:true,extraNets:'',disableServices:true,restrictMac:false,user:'',pass:'',disableAdmin:false},
+    snmp:{enabled:false,community:'',host:'',location:'',contact:''},
+    syslog:{enabled:false,host:''},
+    backup:false,noAccents:true
+  };
+  function mk(id,name,o){s.vlans.push(newVlan(s,Object.assign({id:id,name:name,cidr:'10.0.'+id+'.0/24'},o)));}
+  mk(10,'Gerência',{});
+  mk(20,'Servidores',{dhcp:false,shared:true});
+  mk(30,'Assistencial',{});
+  mk(40,'Administrativo',{});
+  mk(50,'Wi-Fi visitantes',{isolate:true});
+  mk(60,'CFTV',{isolate:true,internet:false});
+  mk(70,'VoIP',{});
+  s.mgmtUid=s.vlans[0].uid;
+  ensurePorts(s);
+  return s;
+}
+
+/* ================= geração do script ================= */
+function vlanIface(id,name){
+  var base='vlan'+id, room=15-base.length-1;
+  var sl=slug(name).slice(0,Math.max(0,room)).replace(/-+$/,'');
+  return sl?base+'-'+sl:base;
+}
+
+function build(s){
+  var issues=[], out=[];
+  function E(m){issues.push({lv:'erro',m:m});}
+  function W(m){issues.push({lv:'aviso',m:m});}
+  function fix(t){return s.noAccents?strip(t):t;}
+  function C(t){return 'comment='+qs(fix(t));}
+  function H(t){out.push('# '+fix(t));}
+  function P(){for(var i=0;i<arguments.length;i++) out.push(arguments[i]);}
+  function S(t){out.push('','# --- '+fix(t)+' ---');}
+  var ros7=String(s.ros)==='7';
+  var okV=function(x){return x.id>=1&&x.id<=4094;};
+
+  /* --- derivados --- */
+  var names=portNames(s);
+  var vlans=s.vlans.map(function(x){
+    var id=parseInt(x.id,10);
+    return Object.assign({},x,{id:id,c:parseCidr(x.cidr),iface:vlanIface(id,x.name)});
+  });
+  var byUid={}; vlans.forEach(function(x){byUid[x.uid]=x;});
+  var mgmt=byUid[s.mgmtUid]||null;
+  var mg=(mgmt&&okV(mgmt))?mgmt:null;
+  var ports=names.map(function(n){return Object.assign({name:n},s.ports[n]||{role:'unused'});});
+  var wanPort=ports.filter(function(p){return p.role==='wan';})[0]||null;
+  var wan2Port=ports.filter(function(p){return p.role==='wan2';})[0]||null;
+  var trunks=ports.filter(function(p){return p.role==='trunk';});
+  var V=vlans.filter(okV);
+  var access=ports.filter(function(p){return p.role==='access'&&byUid[p.vlan]&&okV(byUid[p.vlan]);});
+  ports.forEach(function(p){if(p.role==='access'&&!(byUid[p.vlan]&&okV(byUid[p.vlan]))) W('A porta '+p.name+' está como Acesso, mas a VLAN escolhida não existe ou é inválida.');});
+  var nm=function(x){return x.name||('VLAN '+x.id);};
+
+  /* --- validações --- */
+  if(!vlans.length) E('Adicione ao menos uma VLAN.');
+  var seen={};
+  vlans.forEach(function(x){
+    if(!okV(x)){E('VLAN "'+nm(x)+'": o ID deve estar entre 1 e 4094.');}
+    else{
+      if(seen[x.id]) E('O ID '+x.id+' está repetido ('+seen[x.id]+' e '+nm(x)+').'); else seen[x.id]=nm(x);
+      if(x.id===1) W('A VLAN 1 é a padrão do bridge; prefira outro ID.');
+    }
+    if(!x.c) E('VLAN '+nm(x)+': sub-rede inválida. Use o formato 10.0.10.0/24.');
+  });
+  for(var i=0;i<vlans.length;i++) for(var j=i+1;j<vlans.length;j++){
+    var a=vlans[i].c,b=vlans[j].c;
+    if(a&&b&&!(a.bcast<b.net||b.bcast<a.net)) E('As sub-redes de '+nm(vlans[i])+' e '+nm(vlans[j])+' se sobrepõem.');
+  }
+  V.forEach(function(x){
+    if(!x.c) return;
+    var g=x.c.net+1, gt=(x.gw||'').trim();
+    if(gt){var gi=ip2int(gt); if(gi===null||gi<=x.c.net||gi>=x.c.bcast) E('VLAN '+nm(x)+': o gateway está fora da sub-rede.'); else g=gi;}
+    x.gwI=g;
+    var pa=x.c.net+10, pb=x.c.bcast-1; if(pa>pb) pa=x.c.net+2;
+    var pt=(x.pool||'').trim();
+    if(pt){
+      var m=pt.match(/^(\S+)\s*-\s*(\S+)$/), ia=m?ip2int(m[1]):null, ib=m?ip2int(m[2]):null;
+      if(ia===null||ib===null||ia>ib||ia<=x.c.net||ib>=x.c.bcast) E('VLAN '+nm(x)+': faixa DHCP inválida ou fora da sub-rede.');
+      else{pa=ia;pb=ib;}
+    }
+    x.poolA=pa; x.poolB=pb;
+    if(x.dhcp&&pa<=g&&g<=pb) W('VLAN '+nm(x)+': o gateway está dentro da faixa DHCP.');
+  });
+
+  var extra=splitList(s.sec.extraNets), extraOk=[];
+  extra.forEach(function(x){if(okNet(x)) extraOk.push(x); else E('Rede extra inválida: "'+x+'".');});
+  var mgmtNets=[];
+  if(mg&&mg.c) mgmtNets.push({net:int2ip(mg.c.net)+'/'+mg.c.prefix,note:'VLAN de gerência'});
+  extraOk.forEach(function(x){mgmtNets.push({net:x,note:'Rede extra de gerência'});});
+  var netStr=mgmtNets.map(function(x){return x.net;}).join(',');
+  if(s.sec.restrictMgmt&&!mgmtNets.length) E('O acesso está restrito à gerência, mas não há VLAN de gerência nem rede extra: você perderia o acesso ao roteador.');
+  if(!mg&&V.length) W('Nenhuma VLAN marcada como gerência.');
+
+  if(!wanPort) E('Nenhuma porta foi definida como WAN.');
+  if(wan2Port&&!wanPort) E('Existe uma porta WAN 2, mas nenhuma porta está definida como WAN principal: defina a WAN principal primeiro.');
+  if(!access.length&&!trunks.length) W('Nenhuma porta LAN configurada: escolha Tronco ou Acesso para pelo menos uma porta.');
+  else if(mg&&!access.some(function(p){return p.vlan===mg.uid;})&&!trunks.length) W('Nenhuma porta dá acesso à VLAN de gerência. Você não conseguirá administrar o roteador pela LAN.');
+
+  var w=s.wan, wi=null, gwOk=false, vlanWan=null;
+  var wv=String(w.vlan==null?'':w.vlan).trim();
+  if(wv){var n=parseInt(wv,10); if(!/^\d+$/.test(wv)||n<1||n>4094) E('VLAN da WAN inválida (use de 1 a 4094).'); else vlanWan=n;}
+  if(w.type==='static'){
+    wi=parseIfAddr(w.ip); if(!wi) E('IP da WAN inválido. Use o formato 200.10.20.2/30.');
+    gwOk=ip2int(w.gw||'')!==null; if(!gwOk) E('Gateway da WAN inválido.');
+  }
+  if(w.type==='pppoe'){
+    if(!(w.user||'').trim()) W('Informe o usuário PPPoE; o script usa USUARIO como marcador.');
+    if(!w.pass) W('Informe a senha PPPoE; o script usa SENHA como marcador.');
+  }
+
+  var w2=s.wan2, w2i=null, gw2Ok=false, vlanWan2=null;
+  if(wan2Port){
+    var wv2=String(w2.vlan==null?'':w2.vlan).trim();
+    if(wv2){var n2=parseInt(wv2,10); if(!/^\d+$/.test(wv2)||n2<1||n2>4094) E('VLAN da WAN 2 inválida (use de 1 a 4094).'); else vlanWan2=n2;}
+    if(w2.type==='static'){
+      w2i=parseIfAddr(w2.ip); if(!w2i) E('IP da WAN 2 inválido. Use o formato 200.10.20.2/30.');
+      gw2Ok=ip2int(w2.gw||'')!==null; if(!gw2Ok) E('Gateway da WAN 2 inválido.');
+    }
+    if(w2.type==='pppoe'){
+      if(!(w2.user||'').trim()) W('Informe o usuário PPPoE da WAN 2; o script usa USUARIO2 como marcador.');
+      if(!w2.pass) W('Informe a senha PPPoE da WAN 2; o script usa SENHA2 como marcador.');
+    }
+    if(w.type!=='static'&&w2.type!=='static') W('Failover sem nenhuma WAN de IP fixo: a troca só ocorre quando a interface ou a sessão cai, não quando o link fica sem Internet.');
+  }
+
+  var dnsList=splitList(s.dns.servers);
+  dnsList.forEach(function(x){if(ip2int(x)===null) E('Servidor DNS inválido: "'+x+'".');});
+  dnsList=dnsList.filter(function(x){return ip2int(x)!==null;});
+  if(!s.dns.local&&!dnsList.length) W('Nenhum servidor DNS informado.');
+  var ntpList=splitList(s.dns.ntp).filter(function(x){return /^[A-Za-z0-9.-]+$/.test(x);});
+
+  if(!s.sec.firewall){
+    if(s.dns.local) W('Sem firewall, o DNS local fica acessível pela WAN.');
+    if(V.some(function(x){return x.isolate||x.shared||!x.internet;})) W('Firewall desativado: isolamento, compartilhamento e bloqueio de Internet das VLANs não serão aplicados.');
+  }
+
+  var su=(s.sec.user||'').trim();
+  if(su&&!/^[A-Za-z0-9_.-]+$/.test(su)) E('Nome de usuário inválido (use letras, números, ponto, hífen ou sublinhado).');
+  if(s.sec.disableAdmin&&!su) E('Para desativar o admin, informe um novo usuário administrador.');
+  if(su&&!s.sec.pass) W('Senha do novo usuário vazia: o script usa TROQUE-ESTA-SENHA. Altere após a importação.');
+  if(!su) W('O usuário admin continua com senha em branco após o reset. Crie um novo usuário ou defina uma senha.');
+
+  var snmpOn=!!s.snmp.enabled, snmpHost='';
+  if(snmpOn){
+    if(!(s.snmp.community||'').trim()) E('Informe a comunidade SNMP.');
+    else if(/^(public|private)$/i.test(s.snmp.community.trim())) W('A comunidade SNMP "'+s.snmp.community.trim()+'" é previsível; use outra.');
+    var sh=(s.snmp.host||'').trim();
+    if(sh){ if(okNet(sh)) snmpHost=sh.indexOf('/')<0?sh+'/32':sh; else E('IP do servidor de monitoramento inválido.'); }
+    else W('Sem IP do servidor de monitoramento, o SNMP não recebe regra de firewall própria.');
+  }
+  var sysOn=!!s.syslog.enabled;
+  if(sysOn&&ip2int(s.syslog.host||'')===null){E('IP do servidor syslog inválido.'); sysOn=false;}
+
+  /* --- cabeçalho --- */
+  var dt=new Date().toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+  H('=====================================================================');
+  H('Configuração gerada em '+dt);
+  H('Equipamento: '+MODELS[s.model].short+' | RouterOS '+(ros7?'7.x':'6.49'));
+  H('Pré-requisito: roteador zerado (/system reset-configuration no-defaults=yes skip-backup=yes)');
+  H('Aplique com o Modo Seguro ativado e mantenha uma porta de gerência à mão.');
+  H('O filtro de VLAN do bridge é ativado na última linha, para não derrubar o acesso.');
+  H('=====================================================================');
+
+  S('Identidade e fuso horário');
+  P('/system identity','set name='+bv(s.identity||'MikroTik'));
+  P('/system clock','set time-zone-name='+s.tz+(ros7?' time-zone-autodetect=no':''));
+
+  /* --- portas físicas --- */
+  var eth=[];
+  ports.forEach(function(p){
+    if(p.role==='wan') eth.push('set [ find default-name='+p.name+' ] '+C(p.note||'WAN'));
+    else if(p.role==='wan2') eth.push('set [ find default-name='+p.name+' ] '+C(p.note||'WAN 2 (failover)'));
+    else if(p.role==='unused') eth.push('set [ find default-name='+p.name+' ] disabled=yes '+C(p.note||'Livre - desativada'));
+  });
+  if(eth.length){S('Portas físicas'); P('/interface ethernet'); P.apply(null,eth);}
+
+  /* --- WAN e failover --- */
+  var wanIface=null, wan2Iface=null;
+  var DIST1=1, DIST2=2;
+  if(wanPort){
+    var base=wanPort.name;
+    if(vlanWan||w.type==='pppoe'||wan2Port) S('WAN');
+    if(wan2Port){
+      H('Failover: a WAN principal tem prioridade (distância '+DIST1+'); a WAN 2 assume quando a principal cai (distância '+DIST2+').');
+      if(w.type!=='static'&&w2.type!=='static') H('Ambas dinâmicas: a troca ocorre quando a interface/sessão cai, não quando o link fica sem Internet com o cabo ligado.');
+    }
+    if(vlanWan){P('/interface vlan','add interface='+base+' name=vlan-wan vlan-id='+vlanWan+' '+C('VLAN da WAN')); base='vlan-wan';}
+    if(w.type==='pppoe'){
+      P('/interface pppoe-client','add name=pppoe-wan interface='+base+' user='+qs((w.user||'').trim()||'USUARIO')+' password='+qs(w.pass||'SENHA')+
+        ' add-default-route=yes'+(wan2Port?' default-route-distance='+DIST1:'')+' use-peer-dns='+(dnsList.length?'no':'yes')+' disabled=no '+C('WAN PPPoE'));
+      wanIface='pppoe-wan';
+    } else wanIface=base;
+  }
+  if(wan2Port){
+    var base2=wan2Port.name;
+    if(vlanWan2){P('/interface vlan','add interface='+base2+' name=vlan-wan2 vlan-id='+vlanWan2+' '+C('VLAN da WAN 2')); base2='vlan-wan2';}
+    if(w2.type==='pppoe'){
+      P('/interface pppoe-client','add name=pppoe-wan2 interface='+base2+' user='+qs((w2.user||'').trim()||'USUARIO2')+' password='+qs(w2.pass||'SENHA2')+
+        ' add-default-route=yes default-route-distance='+DIST2+' use-peer-dns='+(dnsList.length?'no':'yes')+' disabled=no '+C('WAN 2 PPPoE'));
+      wan2Iface='pppoe-wan2';
+    } else wan2Iface=base2;
+  }
+
+  /* --- bridge e VLANs --- */
+  S('Bridge e VLANs');
+  P('/interface bridge','add name=bridge-lan protocol-mode=rstp vlan-filtering=no '+C('Bridge LAN'));
+  var bp=[];
+  trunks.forEach(function(p){bp.push('add bridge=bridge-lan interface='+p.name+' frame-types=admit-only-vlan-tagged ingress-filtering=yes '+C(p.note||'Tronco (VLANs com tag)'));});
+  access.forEach(function(p){var x=byUid[p.vlan]; bp.push('add bridge=bridge-lan interface='+p.name+' pvid='+x.id+' frame-types=admit-only-untagged-and-priority-tagged ingress-filtering=yes '+C(p.note||('Acesso VLAN '+x.id)));});
+  if(bp.length){P('/interface bridge port'); P.apply(null,bp);}
+  var bvl=V.map(function(x){
+    var tagged=['bridge-lan'].concat(trunks.map(function(p){return p.name;}));
+    var untag=access.filter(function(p){return p.vlan===x.uid;}).map(function(p){return p.name;});
+    return 'add bridge=bridge-lan tagged='+tagged.join(',')+(untag.length?' untagged='+untag.join(','):'')+' vlan-ids='+x.id+' '+C(nm(x));
+  });
+  if(bvl.length){P('/interface bridge vlan'); P.apply(null,bvl);}
+  if(V.length){P('/interface vlan'); P.apply(null,V.map(function(x){return 'add interface=bridge-lan name='+x.iface+' vlan-id='+x.id+' '+C(nm(x));}));}
+
+  /* --- listas de interfaces --- */
+  S('Listas de interfaces');
+  P('/interface list','add name=WAN','add name=LAN');
+  if(s.sec.restrictMac) P('add name=MGMT');
+  var lm=[];
+  if(wanIface) lm.push('add interface='+wanIface+' list=WAN');
+  if(wan2Iface) lm.push('add interface='+wan2Iface+' list=WAN '+C('Failover'));
+  V.forEach(function(x){lm.push('add interface='+x.iface+' list=LAN');});
+  if(s.sec.restrictMac&&mg) lm.push('add interface='+mg.iface+' list=MGMT');
+  if(lm.length){P('/interface list member'); P.apply(null,lm);}
+
+  /* --- endereços --- */
+  S('Endereços IP e rotas');
+  var ia=[];
+  V.filter(function(x){return x.c;}).forEach(function(x){ia.push('add address='+int2ip(x.gwI)+'/'+x.c.prefix+' interface='+x.iface+' '+C(nm(x)));});
+  if(w.type==='static'&&wi&&wanIface) ia.push('add address='+wi.ip+'/'+wi.prefix+' interface='+wanIface+' '+C('WAN'));
+  if(w2.type==='static'&&w2i&&wan2Iface) ia.push('add address='+w2i.ip+'/'+w2i.prefix+' interface='+wan2Iface+' '+C('WAN 2'));
+  if(ia.length){P('/ip address'); P.apply(null,ia);}
+  var chk=wan2Port&&s.failover.checkGateway;
+  if(w.type==='static'&&gwOk&&wanIface) P('/ip route','add dst-address=0.0.0.0/0 gateway='+w.gw.trim()+(wan2Port?' distance='+DIST1:'')+(chk?' check-gateway=ping':'')+' '+C('Rota padrão (WAN)'));
+  if(w.type==='dhcp'&&wanIface) P('/ip dhcp-client','add interface='+wanIface+' add-default-route=yes'+(wan2Port?' default-route-distance='+DIST1:'')+' use-peer-dns='+(dnsList.length?'no':'yes')+' disabled=no '+C('WAN DHCP'));
+  if(w2.type==='static'&&gw2Ok&&wan2Iface) P('/ip route','add dst-address=0.0.0.0/0 gateway='+w2.gw.trim()+' distance='+DIST2+(chk?' check-gateway=ping':'')+' '+C('Rota padrão (WAN 2, failover)'));
+  if(w2.type==='dhcp'&&wan2Iface) P('/ip dhcp-client','add interface='+wan2Iface+' add-default-route=yes default-route-distance='+DIST2+' use-peer-dns=no disabled=no '+C('WAN 2 DHCP (failover)'));
+
+  /* --- DHCP --- */
+  var dh=V.filter(function(x){return x.c&&x.dhcp;});
+  if(dh.length){
+    S('Servidores DHCP');
+    P('/ip pool'); P.apply(null,dh.map(function(x){return 'add name=pool-'+x.iface+' ranges='+int2ip(x.poolA)+'-'+int2ip(x.poolB);}));
+    P('/ip dhcp-server'); P.apply(null,dh.map(function(x){return 'add name=dhcp-'+x.iface+' interface='+x.iface+' address-pool=pool-'+x.iface+' lease-time=1d disabled=no';}));
+    P('/ip dhcp-server network'); P.apply(null,dh.map(function(x){
+      var dns=s.dns.local?int2ip(x.gwI):(dnsList.join(',')||int2ip(x.gwI));
+      return 'add address='+int2ip(x.c.net)+'/'+x.c.prefix+' gateway='+int2ip(x.gwI)+' dns-server='+dns+' '+C(nm(x));
+    }));
+  }
+
+  /* --- DNS e NTP --- */
+  S('DNS e NTP');
+  P('/ip dns','set '+(dnsList.length?'servers='+dnsList.join(',')+' ':'')+'allow-remote-requests='+(s.dns.local?'yes':'no'));
+  if(ntpList.length){
+    if(ros7){P('/system ntp client','set enabled=yes','/system ntp client servers'); P.apply(null,ntpList.map(function(x){return 'add address='+x;}));}
+    else P('/system ntp client','set enabled=yes server-dns-names='+ntpList.join(','));
+  }
+
+  /* --- firewall --- */
+  if(s.sec.firewall){
+    S('Firewall');
+    if(s.sec.restrictMgmt&&mgmtNets.length){
+      P('/ip firewall address-list'); P.apply(null,mgmtNets.map(function(x){return 'add address='+x.net+' list=gerencia '+C(x.note);}));
+    }
+    var fi=[];
+    fi.push('add chain=input action=accept connection-state=established,related,untracked '+C('Aceitar conexões estabelecidas'));
+    fi.push('add chain=input action=drop connection-state=invalid '+C('Descartar conexões inválidas'));
+    fi.push('add chain=input action=accept protocol=icmp '+C('Aceitar ICMP'));
+    if(s.sec.restrictMgmt){
+      if(mgmtNets.length) fi.push('add chain=input action=accept src-address-list=gerencia '+C('Acesso de gerência'));
+      if(snmpOn&&snmpHost) fi.push('add chain=input action=accept protocol=udp dst-port=161 src-address='+snmpHost+' '+C('SNMP do servidor de monitoramento'));
+      fi.push('add chain=input action=accept in-interface-list=LAN protocol=udp dst-port=67 '+C('DHCP das VLANs'));
+      if(s.dns.local){
+        fi.push('add chain=input action=accept in-interface-list=LAN protocol=udp dst-port=53 '+C('DNS (UDP) das VLANs'));
+        fi.push('add chain=input action=accept in-interface-list=LAN protocol=tcp dst-port=53 '+C('DNS (TCP) das VLANs'));
+      }
+      fi.push('add chain=input action=drop '+C('Descartar todo o restante'));
+    } else {
+      fi.push('add chain=input action=drop in-interface-list=!LAN '+C('Descartar entrada que não vem da LAN'));
+    }
+    var ff=[];
+    if(s.sec.fasttrack) ff.push('add chain=forward action=fasttrack-connection connection-state=established,related'+(ros7?' hw-offload=yes':'')+' '+C('FastTrack'));
+    ff.push('add chain=forward action=accept connection-state=established,related,untracked '+C('Aceitar conexões estabelecidas'));
+    ff.push('add chain=forward action=drop connection-state=invalid '+C('Descartar conexões inválidas'));
+    V.filter(function(x){return !x.internet;}).forEach(function(x){ff.push('add chain=forward action=drop in-interface='+x.iface+' out-interface-list=WAN '+C(nm(x)+': sem acesso à Internet'));});
+    if(s.sec.mgmtAll&&mg) ff.push('add chain=forward action=accept in-interface='+mg.iface+' out-interface-list=LAN '+C('Gerência acessa todas as VLANs'));
+    V.filter(function(x){return x.shared;}).forEach(function(x){ff.push('add chain=forward action=accept in-interface-list=LAN out-interface='+x.iface+' '+C(nm(x)+': acessível por todas as VLANs'));});
+    V.filter(function(x){return x.isolate;}).forEach(function(x){
+      ff.push('add chain=forward action=drop in-interface='+x.iface+' out-interface-list=LAN '+C(nm(x)+': isolada (saída para outras VLANs)'));
+      ff.push('add chain=forward action=drop in-interface-list=LAN out-interface='+x.iface+' '+C(nm(x)+': isolada (entrada de outras VLANs)'));
+    });
+    ff.push('add chain=forward action=drop connection-state=new connection-nat-state=!dstnat in-interface-list=WAN '+C('Descartar novas conexões da WAN sem dst-nat'));
+    P('/ip firewall filter'); P.apply(null,fi.concat(ff));
+  }
+  if(w.nat){S('NAT'); P('/ip firewall nat','add chain=srcnat action=masquerade out-interface-list=WAN '+C('NAT de saída'));}
+
+  /* --- serviços --- */
+  var svc=[];
+  if(s.sec.disableServices) svc.push('set telnet disabled=yes','set ftp disabled=yes','set www disabled=yes','set www-ssl disabled=yes','set api disabled=yes','set api-ssl disabled=yes');
+  if(s.sec.restrictMgmt&&netStr) svc.push('set ssh address='+netStr,'set winbox address='+netStr);
+  if(svc.length){S('Serviços de gerência'); P('/ip service'); P.apply(null,svc);}
+  if(s.sec.disableServices){P('/ip ssh','set strong-crypto=yes','/ip proxy','set enabled=no','/ip socks','set enabled=no','/ip upnp','set enabled=no','/tool bandwidth-server','set enabled=no');}
+  if(s.sec.restrictMac){
+    S('MAC-Server e descoberta de vizinhos');
+    P('/tool mac-server','set allowed-interface-list=MGMT','/tool mac-server mac-winbox','set allowed-interface-list=MGMT','/ip neighbor discovery-settings','set discover-interface-list=MGMT');
+  }
+
+  /* --- usuários --- */
+  if(su||s.sec.disableAdmin){
+    S('Usuários');
+    if(su) P('/user','add name='+su+' group=full password='+qs(s.sec.pass||'TROQUE-ESTA-SENHA')+' '+C('Administrador'));
+    if(s.sec.disableAdmin&&su){H('ATENÇÃO: entre com o novo usuário e confirme o acesso antes de encerrar a sessão do admin.'); P('/user disable [ find name=admin ]');}
+  }
+
+  /* --- monitoramento --- */
+  if(snmpOn&&(s.snmp.community||'').trim()){
+    S('SNMP');
+    P('/snmp community','set [ find default=yes ] name='+bv(s.snmp.community.trim())+' read-access=yes write-access=no'+(snmpHost?' addresses='+snmpHost:''));
+    P('/snmp','set enabled=yes trap-version=2'+((s.snmp.location||'').trim()?' location='+qs(fix(s.snmp.location.trim())):'')+((s.snmp.contact||'').trim()?' contact='+qs(fix(s.snmp.contact.trim())):''));
+  }
+  if(sysOn){
+    S('Syslog remoto');
+    P('/system logging action','add name=syslog-remoto target=remote remote='+s.syslog.host.trim()+' remote-port=514','/system logging','add action=syslog-remoto topics=info,warning,error,critical');
+  }
+  if(s.backup){
+    S('Backup diário');
+    P('/system script','add name=backup-diario policy=ftp,read,write,policy,test source="/system backup save name=backup-auto; /export file=export-auto"',
+      '/system scheduler','add name=backup-diario interval=1d start-time=03:00:00 on-event=backup-diario policy=ftp,read,write,policy,test');
+  }
+
+  S('Ativação do filtro de VLAN (deixe por último)');
+  P('/interface bridge','set bridge-lan vlan-filtering=yes');
+  out.push('');
+  H('Fim da configuração.');
+
+  var errs=issues.filter(function(i){return i.lv==='erro';}), warns=issues.filter(function(i){return i.lv!=='erro';});
+  return {text:out.join('\n'),issues:errs.concat(warns),errors:errs.length,warnings:warns.length,lines:out.length};
+}
+
+/* ================= realce de sintaxe ================= */
+var VERBS={add:1,set:1,remove:1,enable:1,disable:1,print:1,find:1,get:1,'export':1,'import':1};
+function hl(line){
+  if(!line.trim()) return '';
+  if(/^\s*#/.test(line)) return '<span class="c">'+esc(line)+'</span>';
+  var toks=line.match(/[A-Za-z0-9_.-]+=(?:"(?:[^"\\]|\\.)*"|\S*)|"(?:[^"\\]|\\.)*"|\s+|\S+/g)||[];
+  var inPath=false, html='';
+  toks.forEach(function(t){
+    if(/^\s+$/.test(t)){html+=t;return;}
+    var kv=t.match(/^([A-Za-z0-9_.-]+)=([\s\S]*)$/);
+    if(kv){
+      inPath=false;
+      var val=kv[2], cls=val.charAt(0)==='"'?'s':(/^[\d.\/:,-]+$/.test(val)?'n':'');
+      html+='<span class="k">'+esc(kv[1])+'</span>='+(cls?'<span class="'+cls+'">'+esc(val)+'</span>':esc(val));
+      return;
+    }
+    if(t.charAt(0)==='/'){inPath=true;html+='<span class="p">'+esc(t)+'</span>';return;}
+    if(VERBS[t]===1){inPath=false;html+='<span class="v">'+esc(t)+'</span>';return;}
+    if(inPath){html+='<span class="p">'+esc(t)+'</span>';return;}
+    html+=esc(t);
+  });
+  return html;
+}
+
+/* ================= interface ================= */
+function init(){
+  var root=document.getElementById('app-mikrotik');
+  if(!root) return;
+  var $=function(s,el){return (el||root).querySelector(s);};
+  var $$=function(s,el){return Array.prototype.slice.call((el||root).querySelectorAll(s));};
+  var state=load(), sel=portNames(state)[0], lastText='';
+
+  function isObj(x){return x&&typeof x==='object'&&!Array.isArray(x);}
+  function merge(a,b){Object.keys(b).forEach(function(k){if(isObj(b[k])&&isObj(a[k])) merge(a[k],b[k]); else a[k]=b[k];});}
+  function load(){
+    var s=defaultState();
+    try{
+      var raw=localStorage.getItem(STORE);
+      if(raw){
+        var sv=JSON.parse(raw);
+        if(sv&&sv.v===1){
+          merge(s,sv);
+          if(Array.isArray(sv.vlans)) s.vlans=sv.vlans;
+          if(isObj(sv.ports)) s.ports=sv.ports;
+        }
+      }
+    }catch(e){}
+    if(!s.vlans.some(function(x){return x.uid===s.mgmtUid;})) s.mgmtUid=s.vlans[0]?s.vlans[0].uid:null;
+    ensurePorts(s);
+    return s;
+  }
+  function save(){
+    try{
+      var c=JSON.parse(JSON.stringify(state));
+      c.wan.pass=''; c.sec.pass='';
+      localStorage.setItem(STORE,JSON.stringify(c));
+    }catch(e){}
+  }
+
+  function getP(o,p){return p.split('.').reduce(function(a,k){return a==null?a:a[k];},o);}
+  function setP(o,p,val){var ks=p.split('.'),last=ks.pop(),t=ks.reduce(function(a,k){return a[k];},o);t[last]=val;}
+  function readEl(el){
+    if(el.type==='checkbox') return el.checked;
+    if(el.type==='number') return el.value===''?'':Number(el.value);
+    return el.value;
+  }
+  function syncFromState(){
+    $$('[data-bind]').forEach(function(el){
+      var val=getP(state,el.dataset.bind);
+      if(el.type==='radio') el.checked=String(val)===el.value;
+      else if(el.type==='checkbox') el.checked=!!val;
+      else el.value=val==null?'':val;
+    });
+  }
+  function syncWhen(){
+    $$('[data-when]').forEach(function(el){
+      var parts=el.dataset.when.split('='), cur=getP(state,parts[0]);
+      el.hidden=!(parts.length<2?!!cur:String(cur)===parts[1]);
+    });
+  }
+
+  /* selects estáticos */
+  $('#model').innerHTML=Object.keys(MODELS).map(function(k){return '<option value="'+k+'">'+esc(MODELS[k].label)+'</option>';}).join('');
+  $('#tz').innerHTML=TZ.map(function(t){return '<option value="'+t[0]+'">'+esc(t[1])+'</option>';}).join('');
+
+  /* campos ligados ao estado */
+  function onBind(e){
+    var el=e.target; if(!el.dataset||!el.dataset.bind) return;
+    if(el.type==='radio'&&!el.checked) return;
+    setP(state,el.dataset.bind,readEl(el));
+    if(el.dataset.bind==='model'||el.dataset.bind==='customCount'){ensurePorts(state);renderPorts();}
+    update();
+  }
+  root.addEventListener('input',onBind);
+  root.addEventListener('change',onBind);
+
+  /* ---- portas ---- */
+  function shortName(n){return n.replace(/^ether/,'').replace(/^sfp-sfpplus/,'S+').replace(/^sfp/,'S');}
+  function renderPorts(){
+    ensurePorts(state);
+    var names=portNames(state);
+    if(names.indexOf(sel)<0) sel=names[0];
+    $('#plateName').textContent=MODELS[state.model].short;
+    $('#plateSub').textContent=names.length+' portas';
+    var sfpSeen=false;
+    $('#ports').innerHTML=names.map(function(n){
+      var p=state.ports[n], cls='unused', txt='Livre', full='livre', c='';
+      if(p.role==='wan'){cls='wan';txt='WAN';full='WAN';}
+      else if(p.role==='wan2'){cls='wan2';txt='WAN2';full='WAN 2 (failover)';}
+      else if(p.role==='trunk'){cls='trunk';txt='Tronco';full='tronco';}
+      else if(p.role==='access'){
+        var x=state.vlans.filter(function(y){return y.uid===p.vlan;})[0];
+        if(x){cls='access';txt='V'+x.id;full='acesso VLAN '+x.id;c=x.color;}
+      }
+      var isSfp=n.indexOf('sfp')===0, first=isSfp&&!sfpSeen; if(isSfp) sfpSeen=true;
+      return '<button type="button" class="port '+cls+(isSfp?' sfp':'')+(first?' sfp-first':'')+'" data-port="'+n+'" aria-pressed="'+(n===sel)+'" aria-label="'+n+': '+esc(full)+'" title="'+n+': '+esc(full)+'"'+(c?' style="--pc:'+c+'"':'')+
+        '><span class="jack"><i></i></span><span class="pn">'+shortName(n)+'</span><span class="pr">'+txt+'</span></button>';
+    }).join('');
+    syncEditor();
+  }
+  function syncEditor(){
+    var p=state.ports[sel]; if(!p) return;
+    $('#peName').textContent=sel;
+    $$('input[name=m_prole]').forEach(function(r){r.checked=(r.value===p.role);});
+    var vs=$('#peVlan');
+    vs.innerHTML=state.vlans.map(function(x){return '<option value="'+x.uid+'">'+esc('VLAN '+x.id+' · '+(x.name||'sem nome'))+'</option>';}).join('');
+    if(p.role==='access'&&p.vlan!=null) vs.value=String(p.vlan);
+    $('#peVlanWrap').hidden=p.role!=='access';
+    $('#peNote').value=p.note||'';
+  }
+  $('#ports').addEventListener('click',function(e){
+    var b=e.target.closest('.port'); if(!b) return;
+    sel=b.dataset.port; renderPorts();
+  });
+  $$('input[name=m_prole]').forEach(function(r){
+    r.addEventListener('change',function(){
+      if(!r.checked) return;
+      var p=state.ports[sel];
+      if(r.value==='wan'){Object.keys(state.ports).forEach(function(k){if(k!==sel&&state.ports[k].role==='wan') state.ports[k].role='unused';});}
+      if(r.value==='wan2'){Object.keys(state.ports).forEach(function(k){if(k!==sel&&state.ports[k].role==='wan2') state.ports[k].role='unused';});}
+      p.role=r.value;
+      if(r.value==='access'&&!state.vlans.some(function(x){return x.uid===p.vlan;})){
+        var f=state.vlans.filter(function(x){return x.uid===state.mgmtUid;})[0]||state.vlans[0];
+        p.vlan=f?f.uid:null;
+      }
+      renderPorts(); update();
+    });
+  });
+  $('#peVlan').addEventListener('change',function(e){state.ports[sel].vlan=+e.target.value; renderPorts(); update();});
+  $('#peNote').addEventListener('input',function(e){state.ports[sel].note=e.target.value; update();});
+
+  /* ---- VLANs ---- */
+  var vlanList=$('#vlanList');
+  function vlanRow(x){
+    var a=function(s){return esc(s==null?'':s);};
+    return '<div class="vlan" data-uid="'+x.uid+'" style="--vc:'+x.color+'">'+
+      '<div class="vlan-main">'+
+        '<label class="f"><span>ID</span><input type="number" min="1" max="4094" data-vf="id" value="'+a(x.id)+'"></label>'+
+        '<label class="f"><span>Nome</span><input type="text" data-vf="name" value="'+a(x.name)+'" autocomplete="off"></label>'+
+        '<label class="f f-net"><span>Sub-rede</span><input type="text" data-vf="cidr" value="'+a(x.cidr)+'" placeholder="10.0.10.0/24" autocomplete="off" spellcheck="false"></label>'+
+        '<label class="f f-gw"><span>Gateway</span><input type="text" data-vf="gw" value="'+a(x.gw)+'" autocomplete="off" spellcheck="false"></label>'+
+        '<label class="f f-pool"><span>Faixa DHCP</span><input type="text" data-vf="pool" value="'+a(x.pool)+'" autocomplete="off" spellcheck="false"></label>'+
+      '</div>'+
+      '<div class="vlan-flags">'+
+        '<label class="chip" title="Atribui endereços por DHCP nesta VLAN"><input type="checkbox" data-vf="dhcp"'+(x.dhcp?' checked':'')+'><span>DHCP</span></label>'+
+        '<label class="chip" title="Permite sair para a Internet"><input type="checkbox" data-vf="internet"'+(x.internet?' checked':'')+'><span>Internet</span></label>'+
+        '<label class="chip" title="Não inicia conexões com outras VLANs"><input type="checkbox" data-vf="isolate"'+(x.isolate?' checked':'')+'><span>Isolada</span></label>'+
+        '<label class="chip" title="Todas as VLANs podem acessá-la"><input type="checkbox" data-vf="shared"'+(x.shared?' checked':'')+'><span>Compartilhada</span></label>'+
+        '<label class="chip" title="Administra o roteador e acessa todas as VLANs"><input type="radio" name="m_mgmt" data-vf="mgmt"'+(x.uid===state.mgmtUid?' checked':'')+'><span>Gerência</span></label>'+
+        '<span class="spacer"></span>'+
+        '<button type="button" class="btn small danger" data-remove aria-label="Remover VLAN '+a(x.id)+'">Remover</button>'+
+      '</div></div>';
+  }
+  function refreshPh(row){
+    var uid=+row.dataset.uid, x=state.vlans.filter(function(y){return y.uid===uid;})[0]; if(!x) return;
+    var c=parseCidr(x.cidr), gw=$('[data-vf=gw]',row), pl=$('[data-vf=pool]',row);
+    if(c){
+      var pa=c.net+10,pb=c.bcast-1; if(pa>pb) pa=c.net+2;
+      gw.placeholder='auto: '+int2ip(c.net+1); pl.placeholder='auto: '+int2ip(pa)+'-'+int2ip(pb);
+    } else {gw.placeholder='auto'; pl.placeholder='auto';}
+  }
+  function renderVlans(){
+    vlanList.innerHTML=state.vlans.length?state.vlans.map(vlanRow).join(''):'<p class="empty">Nenhuma VLAN ainda. Adicione a primeira para começar.</p>';
+    $$('.vlan',vlanList).forEach(refreshPh);
+  }
+  vlanList.addEventListener('input',function(e){
+    var el=e.target, f=el.dataset&&el.dataset.vf; if(!f) return;
+    var row=el.closest('.vlan'), uid=+row.dataset.uid;
+    var x=state.vlans.filter(function(y){return y.uid===uid;})[0]; if(!x) return;
+    if(f==='mgmt'){ if(el.checked) state.mgmtUid=uid; }
+    else if(el.type==='checkbox') x[f]=el.checked;
+    else x[f]=el.value;
+    if(f==='cidr') refreshPh(row);
+    if(f==='id'||f==='name') renderPorts();
+    update();
+  });
+  vlanList.addEventListener('click',function(e){
+    var b=e.target.closest('[data-remove]'); if(!b) return;
+    var uid=+b.closest('.vlan').dataset.uid;
+    state.vlans=state.vlans.filter(function(x){return x.uid!==uid;});
+    Object.keys(state.ports).forEach(function(k){var p=state.ports[k]; if(p.role==='access'&&p.vlan===uid){p.role='unused'; p.vlan=null;}});
+    if(state.mgmtUid===uid) state.mgmtUid=state.vlans[0]?state.vlans[0].uid:null;
+    renderVlans(); renderPorts(); update();
+  });
+  $('#addVlan').addEventListener('click',function(){
+    var used={}; state.vlans.forEach(function(x){used[parseInt(x.id,10)]=1;});
+    var id=10; while(used[id]&&id<4094) id+=10;
+    var x=newVlan(state,{id:id,name:'Nova VLAN',cidr:'10.0.'+(id%256)+'.0/24'});
+    state.vlans.push(x);
+    if(state.mgmtUid==null) state.mgmtUid=x.uid;
+    renderVlans(); renderPorts(); update();
+    var last=$$('.vlan [data-vf=name]',vlanList).pop(); if(last){last.focus(); last.select();}
+  });
+
+  /* ---- saída ---- */
+  function update(){
+    syncWhen();
+    var w2p=Object.keys(state.ports).filter(function(k){return state.ports[k].role==='wan2';})[0];
+    $('#failoverSection').hidden=!w2p;
+    if(w2p) $('#failoverPortName').textContent=w2p;
+    var r=build(state); lastText=r.text;
+    $('#code').innerHTML=r.text.split('\n').map(hl).join('\n');
+    $('#fname').textContent='config-'+(slug(state.identity)||'mikrotik')+'.rsc';
+    var st=plural(r.lines,'linha','linhas');
+    if(r.errors) st+=' · '+plural(r.errors,'erro','erros');
+    if(r.warnings) st+=' · '+plural(r.warnings,'aviso','avisos');
+    $('#status').textContent=st; $('#mStatus').textContent=st;
+    $('#issues').innerHTML=r.issues.length
+      ?'<ul>'+r.issues.map(function(i){return '<li class="'+i.lv+'"><b>'+(i.lv==='erro'?'Erro':'Atenção')+'</b>'+esc(i.m)+'</li>';}).join('')+'</ul>'
+      :'<p class="ok">Nenhum problema encontrado.</p>';
+    save();
+  }
+
+  function copyText(t){
+    function fallback(){
+      var ta=document.createElement('textarea'); ta.value=t; ta.setAttribute('readonly','');
+      ta.style.cssText='position:fixed;opacity:0;top:0;left:0'; document.body.appendChild(ta); ta.select();
+      var ok=false; try{ok=document.execCommand('copy');}catch(e){} ta.remove(); return ok;
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(t).then(function(){return true;},function(){return fallback();});
+    }
+    return Promise.resolve(fallback());
+  }
+  var copyTimer;
+  $$('.js-copy').forEach(function(b){
+    b.addEventListener('click',function(){
+      copyText(lastText).then(function(ok){
+        if(!ok){var rg=document.createRange(); rg.selectNodeContents($('#code')); var sl=getSelection(); sl.removeAllRanges(); sl.addRange(rg);}
+        $$('.js-copy').forEach(function(x){x.textContent=ok?'Copiado ✓':'Selecionado: use Ctrl+C';});
+        clearTimeout(copyTimer);
+        copyTimer=setTimeout(function(){$$('.js-copy').forEach(function(x){x.textContent='Copiar script';});},2200);
+      });
+    });
+  });
+
+  /* ---- restaurar ---- */
+  var armed=false, armT, rb=$('#reset');
+  rb.addEventListener('click',function(){
+    if(!armed){armed=true; rb.textContent='Confirmar: descartar alterações'; armT=setTimeout(function(){armed=false; rb.textContent='Restaurar exemplo';},4000); return;}
+    clearTimeout(armT); armed=false; rb.textContent='Restaurar exemplo';
+    state=defaultState(); sel=portNames(state)[0];
+    syncFromState(); renderVlans(); renderPorts(); update();
+  });
+
+  syncFromState(); renderVlans(); renderPorts(); update();
+}
+
+if(typeof module!=='undefined'&&module.exports){
+  module.exports={build:build,hl:hl,defaultState:defaultState,ensurePorts:ensurePorts,portNames:portNames,parseCidr:parseCidr,newVlan:newVlan};
+}
+window.__init_app_mikrotik = init;
+})();
+
+</script>
+<script>
+(function(){
+  function setPlatform(p){
+    var c=document.getElementById('app-cisco');
+    var m=document.getElementById('app-mikrotik');
+    if(p==='cisco'){
+      c.classList.add('active'); m.classList.remove('active');
+      document.title='Gerador de configuração Cisco IOS/IOS XE';
+    } else {
+      m.classList.add('active'); c.classList.remove('active');
+      document.title='Gerador de configuração MikroTik';
+    }
+    try{ localStorage.setItem('cfggen.platform', p); }catch(e){}
+  }
+  document.querySelectorAll('input[name=platform]').forEach(function(r){
+    r.addEventListener('change', function(){ if(r.checked) setPlatform(r.value); });
+  });
+  function boot(){
+    var saved=null;
+    try{ saved=localStorage.getItem('cfggen.platform'); }catch(e){}
+    if(saved==='mikrotik'||saved==='cisco'){
+      document.querySelectorAll('input[name=platform]').forEach(function(r){ r.checked=r.value===saved; });
+      setPlatform(saved);
+    } else setPlatform('cisco');
+    if(typeof window.__init_app_cisco==='function') window.__init_app_cisco();
+    if(typeof window.__init_app_mikrotik==='function') window.__init_app_mikrotik();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+</html>
